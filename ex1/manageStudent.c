@@ -28,9 +28,19 @@
 
 // -------------------------- const definitions -------------------------
 
-const int NUMBER_OF_TOKENS = 6;
-const char DELIMITER[] = "\t";
 const int MAX_TOKEN_SIZE = 50;
+
+const char INVALID_ID[] = "ID is invalid. Must have 10 digits and can't start with 0.";
+const char INVALID_NAME[] = "Name is invalid. Can only include upper/lower case english letters, '-' and spaces.";
+const char INVALID_GRADE[] = "Grade is invalid. Must be between 0 and 100 (included).";
+const char INVALID_AGE[] = "Age is invalid. Must be between 18 and 120 (included).";
+const char INVALID_COUNTRY[] = "Country is invalid. Can only include upper/lower case english letters and '-'.";
+const char INVALID_CITY[] = "City is invalid. Can only include upper/lower case english letters and '-'.";
+const char INVALID_TOO_MANY_TOKENS[] = "Too many student params! Should be 6 params delimited by tab.";
+
+const char ERROR_MSG_HEAD[] = "Error: ";
+const char ZERO_STR[] = "0";
+const char EMPTY_STR[2] = "";
 
 // ------------------------------ functions -----------------------------
 
@@ -44,6 +54,8 @@ typedef struct Student {
     char last[50];
 } Student;
 
+Student db[5000];
+
 int isValidArgs(char *argv[]) {
     printf("%s", argv[0]);
     return 0;
@@ -52,7 +64,8 @@ int isValidArgs(char *argv[]) {
 Student parseStudent(char row[150]) {
     // "<ID> <name> <grade> <age> <country> <city>\n"
     int grade, age;
-    char id[50], name[50], country[50], city[50], last[50] = "";
+    char id[50], name[50], country[50], city[50];
+    char last[2] = "";
 
     sscanf(row, "%s\t%s\t%d\t%d\t%s\t%s\t%s", id, name, &grade, &age, country, city, last);
 
@@ -62,6 +75,7 @@ Student parseStudent(char row[150]) {
     for (int i = 0; i < MAX_TOKEN_SIZE; ++i) {
         s.id[i] = id[i];
         s.name[i] = name[i];
+        s.country[i] = country[i];
         s.city[i] = city[i];
         s.last[i] = last[i];
     }
@@ -81,11 +95,11 @@ int checkStr(char name[50], int isName) {
 }
 
 int validateTokens(Student s) {
-    if (strlen(s.id) != 10 | s.id[0] != '0')
+    if (strlen(s.id) != 10 | s.id[0] == '0')
         return 1;
     else if (!checkStr(s.name, 1))
         return 2;
-    else if (s.age > 100 | s.age < 0)
+    else if (s.grade > 100 | s.grade < 1)
         return 3;
     else if (s.age < 18 | s.age > 120)
         return 4;
@@ -93,24 +107,49 @@ int validateTokens(Student s) {
         return 5;
     else if (!checkStr(s.city, 0))
         return 6;
+    else if (strcmp(s.last, EMPTY_STR) != 0)
+        return 7;
     else
         return -1;
 }
 
-void getStudents() {
+void generateStudents() {
     char row[150] = "";
+    int cntLines = 0;
+    int cntStudents = 0;
+    int errorCode;
 
-    while (strcmp(row, "q") != 0) {
+    while (1) {
         puts("Enter student info. To exit press q, then enter\n");
         gets(row);
+
+        if (strcmp(row, "q") == 0)
+            break;
+
         Student s = parseStudent(row);
-
-        if (validateTokens(s) > 0) {
-            puts("Error: ");
+        if ((errorCode = validateTokens(s)) > 0) {
+            printf("%s", ERROR_MSG_HEAD);
+            if (errorCode == 1)
+                printf("%s", INVALID_ID);
+            else if (errorCode == 2)
+                printf("%s", INVALID_NAME);
+            else if (errorCode == 3)
+                printf("%s", INVALID_GRADE);
+            else if (errorCode == 4)
+                printf("%s", INVALID_AGE);
+            else if (errorCode == 5)
+                printf("%s", INVALID_COUNTRY);
+            else if (errorCode == 6)
+                printf("%s", INVALID_CITY);
+            else // last problem
+                printf("%s", INVALID_TOO_MANY_TOKENS);
+            printf(" in line %d\n", cntLines);
+        } else {
+            db[cntStudents] = s;
+            cntStudents++;
         }
-
-
-        printf("id: %d, name: %s, grade: %d, age: %d, country: %s, city: %s, last: %s\n", s.id, s.name, s.grade, s.age,
+        cntLines++;
+        printf("id: %s, name: %s, grade: %d, age: %d, country: %s, city: %s, last: %s\n", s.id, s.name, s.grade, s.age,
                s.country, s.city, s.last);
     }
 }
@@ -123,8 +162,10 @@ void getStudents() {
 int main(int argc, char *argv[]) {
     int cnt = 0;
     char row[150];
-    getStudents();
+    generateStudents();
     // "<ID> <name> <grade> <age> <country> <city>\n"
+    printf("%s", db[0].city);
+
     return 0;
 }
 // 313  ishay   80  20  il  tlv
