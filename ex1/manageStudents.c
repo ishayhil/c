@@ -24,42 +24,128 @@
 #include <string.h>
 #include <ctype.h>
 
-//#define DEBUG
+#define NODEBUG
 
 // ... rest of includes from the system
 // ... all my includes
 
 // -------------------------- const definitions -------------------------
 
-const int MAX_TOKEN_SIZE = 40;
-const int MAX_DB_SIZE = 5000;
-const int MAX_ROW_SIZE = 150;
+/**
+ * max sizes for each value (token)
+ */
+const int MAX_TOKEN_SIZE = 41;
 
-const int TRUE = 1;
+/**
+ * max rows that the user can input
+ */
+const int MAX_DB_SIZE = 5001;
 
-const char INVALID_ID[] = "ID is invalid. Must have 10 digits and can't start with 0.";
-const char INVALID_NAME[] = "Name is invalid. Can only include upper/lower case english letters, '-' and spaces.";
-const char INVALID_GRADE[] = "Grade is invalid. Must be between 0 and 100 (included).";
-const char INVALID_AGE[] = "Age is invalid. Must be between 18 and 120 (included).";
-const char INVALID_COUNTRY[] = "Country is invalid. Can only include upper/lower case english letters and '-'.";
-const char INVALID_CITY[] = "City is invalid. Can only include upper/lower case english letters and '-'.";
+/**
+ * max characters per row
+ */
+const int MAX_ROW_SIZE = 151;
+
+/**
+ * the len of a valid id str
+ */
+const int idValidLen = 10;
+
+/**
+ * error message for invalid id input
+ */
+const char INVALID_ID[] = "ID is invalid. Must have 10 digits and can't start with 0";
+
+/**
+ * error message for invalid name input
+ */
+const char INVALID_NAME[] = "Name is invalid. Can only include upper/lower case english letters, '-' and spaces";
+
+/**
+ * error message for invalid grade input
+ */
+const char INVALID_GRADE[] = "Grade is invalid. Must be between 0 and 100 (included)";
+
+/**
+ * error message for invalid age input
+ */
+const char INVALID_AGE[] = "Age is invalid. Must be between 18 and 120 (included)";
+
+/**
+ * error message for invalid country input
+ */
+const char INVALID_COUNTRY[] = "Country is invalid. Can only include upper/lower case english letters and '-'";
+
+/**
+ * error message for invalid city input
+ */
+const char INVALID_CITY[] = "City is invalid. Can only include upper/lower case english letters and '-'";
+
+/**
+ * error message for too many tokens
+ */
 const char INVALID_TOO_MANY_TOKENS[] = "Too many student params! Should be 6 params delimited by tab.";
+
+/**
+ * usage msg for too many args
+ */
 const char INVALID_ARGS_CNT[] = "Should only be 1 args.";
 
+/**
+ * usage msg for too invalid single args
+ */
+const char INVALID_ARG[] = "Invalid arg! Valid args are: best, quick, merge.";
+
+/**
+ * best student msg
+ */
 const char BEST_STUDENT_HEAD[] = "best student info is:   ";
 
+/**
+ * best arg
+ */
 const char BEST[] = "best";
+
+/**
+ * quick arg
+ */
 const char QUICK[] = "quick";
+
+/**
+ * merge arg
+ */
 const char MERGE[] = "merge";
 
+/**
+ * usage head msg
+ */
 const char USAGE_HEAD[] = "USAGE: ";
+
+/**
+ * error head msg
+ */
 const char ERROR_MSG_HEAD[] = "Error: ";
+
+/**
+ * zero char
+ */
 const char ZERO_CHAR = '0';
-const char EMPTY_STR[2] = "";
 
+/**
+ * empty string
+ */
+const char EMPTY_STR[] = "";
 
-// ------------------------------ functions -----------------------------
+/**
+ * default int for init
+ */
+const int DEFAULT_INT = 20;
 
+// ------------------------------ decelerations -----------------------------
+/**
+ * Student struct. Holds the matching data of each student. Last = token after the valid last token. For validation
+ * purposes.
+ */
 typedef struct Student {
     char id[MAX_TOKEN_SIZE];
     char name[MAX_TOKEN_SIZE];
@@ -70,22 +156,18 @@ typedef struct Student {
     char last[MAX_TOKEN_SIZE];
 } Student;
 
+/**
+ * acts as the huji database.
+ */
 Student db[MAX_DB_SIZE];
 
-void initDB() {
-    Student s;
-    for (int i = 0; i < MAX_DB_SIZE; ++i) {
-        db[i] = s;
-    }
-}
 
-Student parseStudent(char row[MAX_ROW_SIZE]) {
-    int grade, age;
-    char id[MAX_TOKEN_SIZE], name[MAX_TOKEN_SIZE], country[MAX_TOKEN_SIZE], city[MAX_TOKEN_SIZE];
-    char last[2] = "";
+// ------------------------------ functions -----------------------------
 
-    sscanf(row, "%s\t%s\t%d\t%d\t%s\t%s\t%s", id, name, &grade, &age, country, city, last);
 
+Student initStudent(const char id[MAX_TOKEN_SIZE], const char name[MAX_TOKEN_SIZE], int grade, int age,
+                    const char country[MAX_TOKEN_SIZE], const char city[MAX_TOKEN_SIZE],
+                    const char last[MAX_TOKEN_SIZE]) {
     Student s;
     s.grade = grade;
     s.age = age;
@@ -97,12 +179,30 @@ Student parseStudent(char row[MAX_ROW_SIZE]) {
         s.last[i] = last[i];
     }
     return s;
+
 }
 
-int checkStr(char name[MAX_TOKEN_SIZE], int isName) {
-    int nameLen = strlen(name);
-    for (int i = 0; i < nameLen; ++i) {
-        if ((isspace(name[i]) && isName) | isalpha(name[i]) | name[i] == '-')
+void initDB() {
+    Student s = initStudent(EMPTY_STR, EMPTY_STR, DEFAULT_INT, DEFAULT_INT, EMPTY_STR, EMPTY_STR, EMPTY_STR);
+    for (int i = 0; i < MAX_DB_SIZE; ++i) {
+        db[i] = s;
+    }
+}
+
+Student parseStudent(char row[MAX_ROW_SIZE]) {
+    int grade, age;
+    char id[MAX_TOKEN_SIZE], name[MAX_TOKEN_SIZE], country[MAX_TOKEN_SIZE], city[MAX_TOKEN_SIZE];
+    char last[2] = "";
+
+    sscanf(row, "%[^\t]\t%[^\t]\t%d\t%d\t%[^\t]\t%[^\t]\t%[^\n]", id, name, &grade, &age, country, city, last);
+
+    return initStudent(id, name, grade, age, country, city, last);
+}
+
+int checkCityCountryOrName(char str[], int isName) {
+    int strLen = strlen(str);
+    for (int i = 0; i < strLen; ++i) {
+        if ((isspace(str[i]) && isName) | isalpha(str[i]) | str[i] == '-')
             continue;
         else
             return 0;
@@ -110,18 +210,32 @@ int checkStr(char name[MAX_TOKEN_SIZE], int isName) {
     return 1;
 }
 
+int checkID(char id[]) {
+    int idLen = strlen(id);
+    if (idLen != idValidLen | id[0] == ZERO_CHAR) {
+        return 0;
+    }
+
+    for (int i = 0; i < idLen; ++i) {
+        if (!isdigit(id[i])) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
 int validateTokens(Student s) {
-    if (strlen(s.id) != 10 | s.id[0] == ZERO_CHAR)
+    if (!checkID(s.id))
         return 1;
-    else if (!checkStr(s.name, 1))
+    else if (!checkCityCountryOrName(s.name, 1))
         return 2;
-    else if (s.grade > 100 | s.grade < 1)
+    else if (s.grade > 100 | s.grade < 0)
         return 3;
     else if (s.age < 18 | s.age > 120)
         return 4;
-    else if (!checkStr(s.country, 0))
+    else if (!checkCityCountryOrName(s.country, 0))
         return 5;
-    else if (!checkStr(s.city, 0))
+    else if (!checkCityCountryOrName(s.city, 0))
         return 6;
     else if (strcmp(s.last, EMPTY_STR) != 0)
         return 7;
@@ -142,7 +256,7 @@ int generateStudents() {
     int errorCode;
     initDB();
 
-    while (TRUE) {
+    while (1) {
         puts("Enter student info. To exit press q, then enter\n");
         gets(row);
 
@@ -166,7 +280,7 @@ int generateStudents() {
                 printf("%s", INVALID_CITY);
             else // last problem
                 printf("%s", INVALID_TOO_MANY_TOKENS);
-            printf(" in line %d\n", cntLines);
+            printf(" in line %d.\n", cntLines);
         } else {
             db[cntStudents] = s;
             cntStudents++;
@@ -249,6 +363,47 @@ void mergeSort(int l, int r) {
     }
 }
 
+// --------------------------------------
+
+void swap(int i, int j) {
+    Student temp = db[i];
+    db[i] = db[j];
+    db[j] = temp;
+}
+
+
+int partition(int low, int high) {
+    Student pivot = db[high];    // pivot
+    int i = (low - 1);  // Index of smaller element
+
+    for (int j = low; j <= high - 1; j++) {
+        // If current element is smaller than the pivot
+        if (strcmp(db[j].name, pivot.name) < 0) { // db[j] < pivot)
+            i++;    // increment index of smaller element
+            swap(i, j);
+        }
+    }
+    swap(i + 1, high);
+    return (i + 1);
+}
+
+/* The main function that implements QuickSort
+ arr[] --> Array to be sorted,
+  low  --> Starting index,
+  high  --> Ending index */
+void quickSort(int low, int high) {
+    if (low < high) {
+        /* pi is partitioning index, arr[p] is now
+           at right place */
+        int pi = partition(low, high);
+
+        // Separately sort elements before
+        // partition and after partition
+        quickSort(low, pi - 1);
+        quickSort(pi + 1, high);
+    }
+}
+
 void printDB(int studentCnt) {
     for (int i = 0; i < studentCnt; ++i) {
         printStudent(db[i]);
@@ -260,13 +415,14 @@ void printDB(int studentCnt) {
  * @return 0, to tell the system the execution ended without errors.
  */
 int main(int argc, char *argv[]) {
-//    int studentCnt = generateStudents();
-    // "<ID> <name> <grade> <age> <country> <city>\n"
 
-    Student s1 = parseStudent("3135343981  ishay   8  20  il  tlv");
-    Student s2 = parseStudent("3135343981  ishay   4  20  il  tlv");
-    Student s3 = parseStudent("3135343981  ishay   23  20  il  tlv");
-    Student s4 = parseStudent("3135343981  ishay   1  20  il  tlv");
+#ifdef NODEBUG
+    int studentCnt = generateStudents();
+#else
+    Student s1 = parseStudent("3135343981\tgshay\t8\t20\til\ttlv\t");
+    Student s2 = parseStudent("3135343981\tfshay\t4\t20\til\ttlv\t");
+    Student s3 = parseStudent("3135343981\tbhay\t23\t20\til\ttlv\t");
+    Student s4 = parseStudent("3135343981\tashay\t1\t18\til\ttlv\t");
 
     db[0] = s1;
     db[1] = s2;
@@ -274,6 +430,7 @@ int main(int argc, char *argv[]) {
     db[3] = s4;
 
     int studentCnt = 4;
+#endif
 
     if (argc != 2) {
         printf("%s%s", USAGE_HEAD, INVALID_ARGS_CNT);
@@ -286,15 +443,11 @@ int main(int argc, char *argv[]) {
         printDB(studentCnt);
         return 0;
     } else if (strcmp(argv[1], QUICK) == 0) {
+        quickSort(0, studentCnt - 1);
+        printDB(studentCnt);
         return 0;
     } else { // invalid argument!
+        printf("%s%s", USAGE_HEAD, INVALID_ARG);
         return 1;
     }
 }
-
-
-
-// 3135343981  ishay   1  20  il  tlv
-// 3135343981  ishay   2  20  il  tlv
-// 3135343981  ishay   3  100  il  tlv
-// 3135343981  ishay   4  18  il  tlv
