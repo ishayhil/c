@@ -149,8 +149,8 @@ const int DEFAULT_INT = 20;
 typedef struct Student {
     char id[MAX_TOKEN_SIZE];
     char name[MAX_TOKEN_SIZE];
-    int grade;
-    int age;
+    char grade[MAX_TOKEN_SIZE];
+    char age[MAX_TOKEN_SIZE];
     char country[MAX_TOKEN_SIZE];
     char city[MAX_TOKEN_SIZE];
     char last[MAX_TOKEN_SIZE];
@@ -165,36 +165,36 @@ Student db[MAX_DB_SIZE];
 // ------------------------------ functions -----------------------------
 
 
-Student initStudent(const char id[MAX_TOKEN_SIZE], const char name[MAX_TOKEN_SIZE], int grade, int age,
-                    const char country[MAX_TOKEN_SIZE], const char city[MAX_TOKEN_SIZE],
-                    const char last[MAX_TOKEN_SIZE]) {
+Student initStudent(const char id[], const char name[], const char grade[], const char age[],
+                    const char country[], const char city[],
+                    const char last[]) {
     Student s;
-    s.grade = grade;
-    s.age = age;
     for (int i = 0; i < MAX_TOKEN_SIZE; ++i) {
         s.id[i] = id[i];
         s.name[i] = name[i];
         s.country[i] = country[i];
         s.city[i] = city[i];
         s.last[i] = last[i];
+        s.grade[i] = grade[i];
+        s.age[i] = age[i];
     }
     return s;
 
 }
 
 void initDB() {
-    Student s = initStudent(EMPTY_STR, EMPTY_STR, DEFAULT_INT, DEFAULT_INT, EMPTY_STR, EMPTY_STR, EMPTY_STR);
+    Student s = initStudent(EMPTY_STR, EMPTY_STR, EMPTY_STR, EMPTY_STR, EMPTY_STR, EMPTY_STR, EMPTY_STR);
     for (int i = 0; i < MAX_DB_SIZE; ++i) {
         db[i] = s;
     }
 }
 
 Student parseStudent(char row[MAX_ROW_SIZE]) {
-    int grade, age;
-    char id[MAX_TOKEN_SIZE], name[MAX_TOKEN_SIZE], country[MAX_TOKEN_SIZE], city[MAX_TOKEN_SIZE];
-    char last[2] = "";
+    char id[MAX_TOKEN_SIZE], name[MAX_TOKEN_SIZE], country[MAX_TOKEN_SIZE], city[MAX_TOKEN_SIZE], grade[MAX_TOKEN_SIZE],
+            age[MAX_TOKEN_SIZE];
+    char last[MAX_TOKEN_SIZE] = "";
 
-    sscanf(row, "%[^\t]\t%[^\t]\t%d\t%d\t%[^\t]\t%[^\t]\t%[^\n]", id, name, &grade, &age, country, city, last);
+    sscanf(row, "%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\t]\t%[^\n]", id, name, grade, age, country, city, last);
 
     return initStudent(id, name, grade, age, country, city, last);
 }
@@ -224,14 +224,26 @@ int checkID(char id[]) {
     return 1;
 }
 
+
+int checkNumeric(char numericStrRep[], int lowest, int highest) {
+    int strLen = strlen(numericStrRep);
+    for (int i = 0; i < strLen; ++i) {
+        if (!isdigit(numericStrRep[i]))
+            return 0;
+    }
+    int numeric;
+    sscanf(numericStrRep, "%d", &numeric);
+    return numeric >= lowest && numeric <= highest;
+}
+
 int validateTokens(Student s) {
     if (!checkID(s.id))
         return 1;
     else if (!checkCityCountryOrName(s.name, 1))
         return 2;
-    else if (s.grade > 100 | s.grade < 0)
+    else if (!checkNumeric(s.grade, 0, 100))
         return 3;
-    else if (s.age < 18 | s.age > 120)
+    else if (!checkNumeric(s.age, 18, 120))
         return 4;
     else if (!checkCityCountryOrName(s.country, 0))
         return 5;
@@ -244,7 +256,7 @@ int validateTokens(Student s) {
 }
 
 void printStudent(Student s) {
-    printf("%s\t%s\t%d\t%d\t%s\t%s\t\n", s.id, s.name, s.grade, s.age,
+    printf("%s\t%s\t%s\t%s\t%s\t%s\t\n", s.id, s.name, s.grade, s.age,
            s.country, s.city);
 }
 
@@ -294,10 +306,15 @@ int generateStudents() {
 
 void printBest(int studentCnt) {
     Student bestS = db[0];
-    double currentBestRatio = bestS.grade * 1.0 / bestS.age;
+    int age, grade;
+    sscanf(db[0].grade, "%d", &grade);
+    sscanf(db[0].age, "%d", &age);
+    double currentBestRatio = grade * 1.0 / age;
     double currentRatio;
     for (int i = 1; i < studentCnt; ++i) {
-        if (currentBestRatio < (currentRatio = db[i].grade * 1.0 / db[i].age)) {
+        sscanf(db[i].grade, "%d", &grade);
+        sscanf(db[i].age, "%d", &age);
+        if (currentBestRatio < (currentRatio = grade * 1.0 / age)) {
             bestS = db[i];
             currentBestRatio = currentRatio;
         }
@@ -451,3 +468,5 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 }
+
+// 3135343981   gshay isa	8	12	il	tlv
