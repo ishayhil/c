@@ -1,0 +1,4 @@
+/Users/ishayhil/huji/c/ex1/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/Users/ishayhil/huji/c/ex1/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/ishayhil/huji/c/ex1/cmake-build-debug/CMakeFiles/ex1_.dir
+/Users/ishayhil/huji/c/ex1/cmake-build-debug/CMakeFiles/ex1.dir

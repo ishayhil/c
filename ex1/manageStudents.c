@@ -24,32 +24,30 @@
 #include <string.h>
 #include <ctype.h>
 
-#define NODEBUG
-
-// ... rest of includes from the system
-// ... all my includes
-
-// -------------------------- const definitions -------------------------
-
 /**
- * max sizes for each value (token)
+ * max characters per row
  */
-const int MAX_TOKEN_SIZE = 41;
+#define MAX_ROW_SIZE 151
 
 /**
  * max rows that the user can input
  */
-const int MAX_DB_SIZE = 5001;
+#define MAX_DB_SIZE 5001
 
 /**
- * max characters per row
+ * max sizes for each value (token)
  */
-const int MAX_ROW_SIZE = 151;
+#define MAX_TOKEN_SIZE 41
+
+
+// -------------------------- const definitions -------------------------
 
 /**
  * the len of a valid id str
  */
-const int idValidLen = 10;
+const int ID_VALID_LEN = 10;
+
+const char STOP[] = "q\r";
 
 /**
  * error message for invalid id input
@@ -200,9 +198,9 @@ Student parseStudent(char row[MAX_ROW_SIZE]) {
 }
 
 int checkCityCountryOrName(char str[], int isName) {
-    int strLen = strlen(str);
+    int strLen = strnlen(str, MAX_TOKEN_SIZE);
     for (int i = 0; i < strLen; ++i) {
-        if ((isspace(str[i]) && isName) | isalpha(str[i]) | str[i] == '-')
+        if ((isspace(str[i]) && isName) || isalpha(str[i]) || (str[i] == '-'))
             continue;
         else
             return 0;
@@ -211,8 +209,8 @@ int checkCityCountryOrName(char str[], int isName) {
 }
 
 int checkID(char id[]) {
-    int idLen = strlen(id);
-    if (idLen != idValidLen | id[0] == ZERO_CHAR) {
+    int idLen = strnlen(id, MAX_TOKEN_SIZE);
+    if (idLen != ID_VALID_LEN || (id[0] == ZERO_CHAR)) {
         return 0;
     }
 
@@ -226,7 +224,7 @@ int checkID(char id[]) {
 
 
 int checkNumeric(char numericStrRep[], int lowest, int highest) {
-    int strLen = strlen(numericStrRep);
+    int strLen = strnlen(numericStrRep, MAX_TOKEN_SIZE);
     for (int i = 0; i < strLen; ++i) {
         if (!isdigit(numericStrRep[i]))
             return 0;
@@ -269,10 +267,10 @@ int generateStudents() {
     initDB();
 
     while (1) {
-        puts("Enter student info. To exit press q, then enter\n");
+        puts("Enter student info. To exit press q, then enter");
         gets(row);
 
-        if (strcmp(row, "q") == 0)
+        if (strcmp(row, STOP) == 0)
             break;
 
         Student s = parseStudent(row);
@@ -330,7 +328,7 @@ void merge(int left, int middle, int right) {
     int n2 = right - middle;
 
     // helper arrays
-    Student L[n1], R[n2];
+    Student L[MAX_ROW_SIZE], R[MAX_ROW_SIZE];
 
     for (i = 0; i < n1; i++)
         L[i] = db[left + i];
@@ -433,21 +431,7 @@ void printDB(int studentCnt) {
  */
 int main(int argc, char *argv[]) {
 
-#ifdef NODEBUG
     int studentCnt = generateStudents();
-#else
-    Student s1 = parseStudent("3135343981\tgshay\t8\t20\til\ttlv\t");
-    Student s2 = parseStudent("3135343981\tfshay\t4\t20\til\ttlv\t");
-    Student s3 = parseStudent("3135343981\tbhay\t23\t20\til\ttlv\t");
-    Student s4 = parseStudent("3135343981\tashay\t1\t18\til\ttlv\t");
-
-    db[0] = s1;
-    db[1] = s2;
-    db[2] = s3;
-    db[3] = s4;
-
-    int studentCnt = 4;
-#endif
 
     if (argc != 2) {
         printf("%s%s", USAGE_HEAD, INVALID_ARGS_CNT);
@@ -468,5 +452,3 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 }
-
-// 3135343981   gshay isa	8	12	il	tlv
