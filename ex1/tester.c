@@ -33,8 +33,7 @@ void reverseInput() {
 }
 
 int main(int argc, char *argv[]) {
-    puts("hi");
-    reverseInput();
+    printf("%d", strcmp("12", "9"));
 }
 
 // 1222/10 = 122.2 / 10 = 12.22 / 10 = 1.222 / 10 = 0
