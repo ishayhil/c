@@ -32,7 +32,7 @@
 /**
  * max rows that the user can input
  */
-#define MAX_DB_SIZE 5001
+#define MAX_DB_SIZE 5000
 
 /**
  * max sizes for each value (token)
@@ -262,7 +262,6 @@ int validateCityCountryOrName(char *str, int isName)
         }
         else
         {
-            puts(str);
             return 0;
         }
     }
@@ -374,6 +373,18 @@ void printStudent(Student s)
 }
 
 /**
+ * Prints all the students in the db by the order they are in the db.
+ * @param studentCnt the number of students.
+ */
+void printDB(int studentCnt)
+{
+    for (int i = 0; i < studentCnt; ++i)
+    {
+        printStudent(db[i]);
+    }
+}
+
+/**
  * generates the student database from the user's input.
  * @return Student count in db.
  */
@@ -475,31 +486,32 @@ void printBest(int studentCnt)
  * @param middle index
  * @param right last
  */
-void merge(int left, int middle, int right)
+void merge(int l, int m, int r)
 {
     int i, j, k;
-    int n1 = middle - left + 1;
-    int n2 = right - middle;
+    int n1 = m - l + 1;
+    int n2 = r - m;
 
     // helper arrays
-    Student L[MAX_ROW_SIZE], R[MAX_ROW_SIZE];
+    Student L[MAX_DB_SIZE], R[MAX_DB_SIZE];
 
+    // init temp arrays
     for (i = 0; i < n1; i++)
     {
-        L[i] = db[left + i];
+        L[i] = db[l + i];
     }
     for (j = 0; j < n2; j++)
     {
-        R[j] = db[middle + 1 + j];
+        R[j] = db[m + 1 + j];
     }
 
-    // merge the array helpers into db
+    // merge two sorted arrays into one
     i = 0;
     j = 0;
-    k = left;
+    k = l;
     while (i < n1 && j < n2)
     {
-        if (L[i].grade <= R[i].grade)
+        if (L[i].grade <= R[j].grade)
         {
             db[k] = L[i];
             i++;
@@ -512,19 +524,21 @@ void merge(int left, int middle, int right)
         k++;
     }
 
-    // if any elements left, copy them.
+    // copy whats left fom L helper
     while (i < n1)
     {
         db[k] = L[i];
-        k++;
         i++;
+        k++;
     }
 
+
+    // copy whats left fom R helper
     while (j < n2)
     {
         db[k] = R[j];
-        k++;
         j++;
+        k++;
     }
 }
 
@@ -598,18 +612,6 @@ void quickSort(int low, int high)
         // sort elements before the partition and after the partition
         quickSort(low, pi - 1);
         quickSort(pi + 1, high);
-    }
-}
-
-/**
- * Prints all the students in the db by the order they are in the db.
- * @param studentCnt the number of students.
- */
-void printDB(int studentCnt)
-{
-    for (int i = 0; i < studentCnt; ++i)
-    {
-        printStudent(db[i]);
     }
 }
 
