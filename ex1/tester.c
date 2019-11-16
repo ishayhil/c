@@ -6,35 +6,48 @@
 #include <string.h>
 #include <ctype.h>
 #include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-
-void reverseInput() {
-    int num;
-    scanf("%d", &num);
-    int tempNum = num;
-    int log10 = 0;
-    while (tempNum != 0) { // log
-        log10++;
-        tempNum /= 10;
+int howManyChars(int n)
+{
+    int i = 1;
+    while ((n = n / 10))
+    {
+        i++;
     }
+    return i;
+}
 
-    int newNum = 0;
-    while (log10 >= 0) {
-        int d = num % 10;
-        int power = 1;
-        for (int i = 0; i < log10 - 1; ++i) { // power
-            power *= 10;
+void decode(const char *text)
+{
+    int i = 0;
+    while (i < (int) strlen(text))
+    {
+        if (isdigit(text[i]))
+        {
+            int n = atoi(text + i);
+            int ch_cnt = howManyChars(n);
+//            printf("%d %d\n", n, ch_cnt);
+            for (int k = 0; k < n; ++k)
+            {
+                printf("%c", text[ch_cnt + i]);
+            }
+            i += ch_cnt + 1;
+
         }
-        newNum += d * power;
-        log10--;
-        num /= 10;
+        else
+        {
+            printf("%c", text[i]);
+            i += 1;
+        }
     }
-    printf("%d\n", newNum);
 }
 
-int main(int argc, char *argv[]) {
-    printf("%d", strcmp("12", "9"));
-}
 
-// 1222/10 = 122.2 / 10 = 12.22 / 10 = 1.222 / 10 = 0
-//
+
+int main(int argc, char *argv[])
+{
+    decode("1a2b3c50d");
+}
