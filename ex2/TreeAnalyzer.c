@@ -124,6 +124,7 @@ int handleRow(Row row, Node *nodes, int treeSize)
         int num = validateTokenInt(ptr, treeSize);
         if (num < 0 || nodes[num].parentNode != NULL || num == row.rowNumber)
         {
+//            printf("node: %d, parent: %d\n", nodes[row.rowNumber].nodeKey, nodes[num].parentNode->nodeKey);
             return 0; // invalid token (size or not pos int) OR node already has parent (then not tree) OR node parent is itself
         }
         nodes[num].parentNode = &nodes[row.rowNumber]; // set parent node for child
@@ -177,6 +178,34 @@ int initTree(Row *rows, Node *nodes, int treeSize)
     return 1;
 }
 
+int countEdges(int treeSize)
+{
+    return treeSize - 1;
+}
+
+int heightOperator(int a, int b, int isMax)
+{
+    return isMax ? a > b : a < b;
+}
+
+int getTreeHeight(Node *root, int current, int isMax)
+{
+    if (root->childrenCnt == 0)
+    {
+        return current;
+    }
+    int bestForNode = isMax ? INT8_MIN : INT8_MAX;
+    for (int i = 0; i < root->childrenCnt; ++i)
+    {
+        int this = getTreeHeight(root->children[i], current + 1, isMax);
+        if (heightOperator(current, bestForNode, isMax))
+        {
+            bestForNode = this;
+        }
+    }
+    return bestForNode;
+}
+
 int main()
 {
     int treeSize = validateFile("/Users/ishayhil/huji/c/ex2/test.in");
@@ -200,7 +229,13 @@ int main()
         printf("%s", "Invalid input\n");
         return 2; // more than 1 root
     }
-    printf("root: %d", root->nodeKey);
+    int edges = countEdges(treeSize);
+    printf("root: %d\n", root->nodeKey);
+    printf("edges: %d\n", edges);
+    int max = getTreeHeight(root, 0, 1);
+    int min = getTreeHeight(root, 0, 0);
+    printf("max height: %d\n", max);
+    printf("min height: %d\n", min);
 
     return 0;
 }
