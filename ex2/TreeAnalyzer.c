@@ -6,14 +6,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include "queue.h"
 #define MAX_ROW_SIZE 1024
 
 typedef struct Node
 {
-    int nodeKey;
+    unsigned int nodeKey;
     struct Node *parentNode;
     struct Node **children;
-    int childrenCnt;
+    unsigned int childrenCnt;
+    unsigned int dist;
+    struct Node *prev;
 } Node;
 
 typedef struct Row
@@ -67,6 +70,8 @@ Node *generateNodes(int treeSize)
         nodes[i].parentNode = NULL;
         nodes[i].children = NULL;
         nodes[i].childrenCnt = 0;
+        nodes[i].dist = INT8_MAX;
+        nodes[i].prev = NULL;
     }
     return nodes;
 }
@@ -140,9 +145,9 @@ void printTree(int treeSize, Node *nodes)
 {
     for (int j = 0; j < treeSize; ++j)
     {
-        int cnt = nodes[j].childrenCnt;
+        unsigned cnt = nodes[j].childrenCnt;
         printf("%d: ", nodes[j].nodeKey);
-        for (int i = 0; i < cnt; ++i)
+        for (unsigned int i = 0; i < cnt; ++i)
         {
             printf("%d ", nodes[j].children[i]->nodeKey);
         }
@@ -195,7 +200,7 @@ int getTreeHeight(Node *root, int current, int isMax)
         return current;
     }
     int bestForNode = isMax ? INT8_MIN : INT8_MAX;
-    for (int i = 0; i < root->childrenCnt; ++i)
+    for (unsigned int i = 0; i < root->childrenCnt; ++i)
     {
         int this = getTreeHeight(root->children[i], current + 1, isMax);
         if (heightOperator(current, bestForNode, isMax))
@@ -204,6 +209,94 @@ int getTreeHeight(Node *root, int current, int isMax)
         }
     }
     return bestForNode;
+}
+
+unsigned int bfs(unsigned int firstNode, Node *nodes, int treeSize) // O(V + E)
+{
+    for (int i = 0; i < treeSize; ++i) // set all dist to inf
+    {
+        nodes[i].dist = INT8_MAX;
+    }
+
+    nodes[firstNode].dist = 0;
+    Queue *queue = allocQueue();
+    enqueue(queue, firstNode);
+    while (!queueIsEmpty(queue))
+    {
+        Node *node = &nodes[dequeue(queue)];
+        for (unsigned int i = 0; i < node->childrenCnt; ++i) // handle children nodes
+        {
+            if (node->children[i]->dist == INT8_MAX)
+            {
+                enqueue(queue, node->children[i]->nodeKey);
+                node->children[i]->dist = node->dist + 1;
+                node->children[i]->prev = node;
+            }
+        }
+        if (node->parentNode != NULL) // handle parent node
+        {
+            if (node->parentNode->dist == INT8_MAX)
+            {
+                enqueue(queue, node->parentNode->nodeKey);
+                node->parentNode->dist = node->dist + 1;
+                node->parentNode->prev = node;
+            }
+        }
+    }
+    unsigned int max = 0; // extract the highest dest
+    for (int i = 0; i < treeSize; ++i)
+    {
+        if (nodes[i].dist > max)
+        {
+            max = nodes[i].dist;
+        }
+    }
+    return max;
+}
+
+unsigned int getTreeWidth(Node *nodes, int treeSize) // O(n^2)
+{
+    unsigned int max = 0;
+    unsigned int res;
+    for (int i = 0; i < treeSize; ++i)
+    {
+        if ((res = bfs(i, nodes, treeSize)) > max)
+        {
+            max = res;
+        }
+    }
+    return max;
+}
+
+void reverseList(unsigned int *lst, unsigned int len)
+{
+    for (unsigned int i = 0; i < len / 2; ++i)
+    {
+        unsigned int temp = lst[i];
+        lst[i] = lst[len - i - 1];
+        lst[len - i - 1] = temp;
+    }
+}
+
+void printPathBetweenNode(unsigned int v, unsigned int u, Node *nodes, int treeSize) // O(n)
+{
+    bfs(v, nodes, treeSize);
+    unsigned int dist = nodes[u].dist;
+    Node *current = &nodes[u];
+    unsigned int *path = (unsigned int *) malloc((dist + 1) * sizeof(unsigned int));
+
+    for (unsigned int i = 0; i < dist + 1; ++i)
+    {
+        path[i] = current->nodeKey;
+        current = current->prev;
+    }
+    reverseList(path, dist + 1);
+    for (unsigned int j = 0; j < dist + 1; ++j)
+    {
+        printf("%d ", path[j]);
+    }
+
+    free(path);
 }
 
 int main()
@@ -236,6 +329,10 @@ int main()
     int min = getTreeHeight(root, 0, 0);
     printf("max height: %d\n", max);
     printf("min height: %d\n", min);
+    unsigned int treeW = getTreeWidth(nodes, treeSize);
+    printf("tree width: %d\n", treeW);
+
+    printPathBetweenNode(1, 6, nodes, treeSize);
 
     return 0;
 }
