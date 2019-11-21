@@ -1,12 +1,26 @@
-//
-// Created by Ishay Hil on 16/11/2019.
-//
+/**
+ * @file TreeAnalyzer.c
+ * @author  Ishay Hilzenrat
+ * @version 1.0
+ * @date 21 Nov 2019
+ *
+ * @brief this file represent a tree with k children ds. It can take a given file and 2 nodes, parse it and print some
+ * very interesting data regarding the tree and the path from node1 to node 2.
+ *
+ * @section LICENSE
+ * This program is not a free software; it has been made with my tears.
+ *
+ * @section DESCRIPTION
+ * this program's input is 3 args: file path, node1, node2. The progrem will parse the file and build the matching tree
+ * or will return an error exit coe (and print an error message) if the args/file is incorrect.
+ * After building the k children tree, the program will print the root, number of nodes and edges, len of min/max branch,
+ * tree diameter and the max path for node1 to node2. All in very efficient runtime complexity.
+ */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <math.h>
 #include <limits.h>
 #include "queue.h"
 #define MAX_ROW_SIZE 1024
@@ -24,8 +38,14 @@ typedef struct Node
     struct Node *prev; // previous node for BFS - recovering the path.
 } Node;
 
+/**
+ * with methods of this class except for main method are success.
+ */
 const int METHOD_SUCCESS = 1;
 
+/**
+ * Error codes enum
+ */
 typedef enum Errors
 {
     MALLOC_FAIL = 3,
@@ -44,6 +64,11 @@ typedef struct Row
     int rowNumber;
 } Row;
 
+/**
+ * Validates that the fail is legit. If so, returns the int of the first line (nodes count).
+ * @param fileName  the file path
+ * @return error code if the file is not legit, the number of nodes if legit.
+ */
 int validateFile(char *fileName) // validates file and get number of vertex
 {
     FILE *file = fopen(fileName, "r");
@@ -64,6 +89,12 @@ int validateFile(char *fileName) // validates file and get number of vertex
     }
 }
 
+/**
+ * Parses the file into list of type Row.
+ * @param fileName the file path
+ * @param treeSize the number of nodes
+ * @return a pointer to the array of Rows.
+ */
 Row *parseFile(char *fileName, int treeSize)
 {
     Row *rows = (Row *) malloc(sizeof(Row) * treeSize);
@@ -84,7 +115,12 @@ Row *parseFile(char *fileName, int treeSize)
     return rows;
 }
 
-Node *generateNodes(int treeSize)
+/**
+ * initiates the nodes with default values. Needs to be freed after.
+ * @param treeSize
+ * @return a pointer to the node array.
+ */
+Node *initNodes(int treeSize)
 {
     Node *nodes = (Node *) malloc(sizeof(Node) * treeSize);
     if (nodes == NULL)
@@ -103,6 +139,10 @@ Node *generateNodes(int treeSize)
     return nodes;
 }
 
+/**
+ * @param row of type Row
+ * @return the number of children for the node.
+ */
 int cntChildren(Row row)
 {
     if (strcmp(row.row, "-") == 0)
@@ -119,6 +159,11 @@ int cntChildren(Row row)
     return childrenCnt;
 }
 
+/**
+ * validates that the node number in the Row is valid. If so, returns the integer.
+ * @param token the token
+ * @param treeSize
+ */
 int validateTokenInt(char *token, int treeSize)
 {
     for (int i = 0; i < (int) strlen(token); ++i)
@@ -132,6 +177,14 @@ int validateTokenInt(char *token, int treeSize)
     return n < treeSize ? n : INVALID_ROW;
 }
 
+/**
+ * For every row, which describes a node, updating the node's children that the node is their parent, and adding them
+ * to the list of pointers to the children. Needs to be freed outside.
+ * @param row the Row
+ * @param nodes all nodes list
+ * @param treeSize
+ * @return success/failure code
+ */
 int handleRow(Row row, Node *nodes, int treeSize)
 {
     if (strcmp(row.row, "\n") == 0 || strcmp(row.row, "\r\n") == 0)
@@ -171,20 +224,11 @@ int handleRow(Row row, Node *nodes, int treeSize)
     return METHOD_SUCCESS;
 }
 
-void printTree(int treeSize, Node *nodes)
-{
-    for (int j = 0; j < treeSize; ++j)
-    {
-        unsigned cnt = nodes[j].childrenCnt;
-        printf("%d: ", nodes[j].nodeKey);
-        for (unsigned int i = 0; i < cnt; ++i)
-        {
-            printf("%d ", nodes[j].children[i]->nodeKey);
-        }
-        puts("");
-    }
-}
-
+/**
+ * @param nodes
+ * @param treeSize
+ * @return the root of the tree
+ */
 Node *getRoot(Node *nodes, int treeSize)
 {
     Node *root = NULL;
@@ -200,6 +244,13 @@ Node *getRoot(Node *nodes, int treeSize)
     return cnt == 1 ? root : NULL;
 }
 
+/**
+ * Initiates the tree by handling each row of the file.
+ * @param rows
+ * @param nodes
+ * @param treeSize
+ * @return success code/failure code.
+ */
 int initTree(Row *rows, Node *nodes, int treeSize)
 {
     for (int i = 0; i < treeSize; ++i)
@@ -213,16 +264,32 @@ int initTree(Row *rows, Node *nodes, int treeSize)
     return METHOD_SUCCESS;
 }
 
+/**
+ * @param treeSize
+ * @return number of edges
+ */
 int countEdges(int treeSize)
 {
     return treeSize - 1;
 }
 
+/**
+ * Operator for the getTreeHeight (max/min).
+ * @param a
+ * @param b
+ * @param isMax 1 if max 0 else
+ */
 int heightOperator(int a, int b, int isMax)
 {
     return isMax ? a > b : a < b;
 }
 
+/**
+ * @param root of every subtree.
+ * @param current current node for recursive call.
+ * @param isMax 1 if max 0 else.
+ * @return the tree height (max or min).
+ */
 int getTreeHeight(Node *root, int current, int isMax)
 {
     if (root->childrenCnt == 0)
@@ -241,6 +308,13 @@ int getTreeHeight(Node *root, int current, int isMax)
     return bestForNode;
 }
 
+/**
+ *
+ * @param firstNode
+ * @param nodes
+ * @param treeSize
+ * @return
+ */
 unsigned int bfs(unsigned int firstNode, Node *nodes, int treeSize) // O(V + E)
 {
     for (int i = 0; i < treeSize; ++i) // set all dist to INT8_MAX (inf)
@@ -407,7 +481,7 @@ int main(int argc, char *args[])
         return invalidInput(NULL, 0); // invalid tree size
     }
     Row *rows = parseFile(args[1], treeSize);
-    Node *nodes = generateNodes(treeSize);
+    Node *nodes = initNodes(treeSize);
 
     int res = initTree(rows, nodes, treeSize);
     free(rows);
