@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <math.h>
+#include <limits.h>
 #include "queue.h"
 #define MAX_ROW_SIZE 1024
 
@@ -95,7 +97,7 @@ Node *generateNodes(int treeSize)
         nodes[i].parentNode = NULL;
         nodes[i].children = NULL;
         nodes[i].childrenCnt = 0;
-        nodes[i].dist = INT8_MAX;
+        nodes[i].dist = INT_MAX;
         nodes[i].prev = NULL;
     }
     return nodes;
@@ -158,8 +160,7 @@ int handleRow(Row row, Node *nodes, int treeSize)
         int num = validateTokenInt(ptr, treeSize);
         if (num < 0 || nodes[num].parentNode != NULL || num == row.rowNumber)
         {
-//            printf("node: %d, parent: %d\n", nodes[row.rowNumber].nodeKey, nodes[num].parentNode->nodeKey);
-            return 0; // invalid token (size or not pos int) OR node already has parent (then not tree) OR node parent is itself
+            return INVALID_ROW; // invalid token (size or not pos int) OR node already has parent (then not tree) OR node parent is itself
         }
         nodes[num].parentNode = &nodes[row.rowNumber]; // set parent node for child
         children[i] = &nodes[num]; // add child to current node
@@ -228,7 +229,7 @@ int getTreeHeight(Node *root, int current, int isMax)
     {
         return current;
     }
-    int bestForNode = isMax ? INT8_MIN : INT8_MAX;
+    int bestForNode = isMax ? INT_MIN : INT_MAX;
     for (unsigned int i = 0; i < root->childrenCnt; ++i)
     {
         int this = getTreeHeight(root->children[i], current + 1, isMax);
@@ -244,7 +245,7 @@ unsigned int bfs(unsigned int firstNode, Node *nodes, int treeSize) // O(V + E)
 {
     for (int i = 0; i < treeSize; ++i) // set all dist to INT8_MAX (inf)
     {
-        nodes[i].dist = INT8_MAX;
+        nodes[i].dist = INT_MAX;
     }
 
     nodes[firstNode].dist = 0;
@@ -255,7 +256,7 @@ unsigned int bfs(unsigned int firstNode, Node *nodes, int treeSize) // O(V + E)
         Node *node = &nodes[dequeue(queue)];
         for (unsigned int i = 0; i < node->childrenCnt; ++i) // handle children nodes
         {
-            if (node->children[i]->dist == INT8_MAX)
+            if (node->children[i]->dist == INT_MAX)
             {
                 enqueue(queue, node->children[i]->nodeKey);
                 node->children[i]->dist = node->dist + 1;
@@ -264,7 +265,7 @@ unsigned int bfs(unsigned int firstNode, Node *nodes, int treeSize) // O(V + E)
         }
         if (node->parentNode != NULL) // handle parent node
         {
-            if (node->parentNode->dist == INT8_MAX)
+            if (node->parentNode->dist == INT_MAX)
             {
                 enqueue(queue, node->parentNode->nodeKey);
                 node->parentNode->dist = node->dist + 1;
@@ -298,16 +299,6 @@ unsigned int getTreeDiameter(Node *nodes, int treeSize) // O(n^2)
     return max;
 }
 
-void reverseList(unsigned int *lst, unsigned int len)
-{
-    for (unsigned int i = 1; i < len / 2; ++i)
-    {
-        unsigned int temp = lst[i];
-        lst[i] = lst[len - i - 1];
-        lst[len - i - 1] = temp;
-    }
-}
-
 unsigned int *getPathBetweenNodes(unsigned int v, unsigned int u, Node *nodes, int treeSize) // O(n)
 {
     bfs(v, nodes, treeSize); // inits the dist between v and all nodes
@@ -325,7 +316,6 @@ unsigned int *getPathBetweenNodes(unsigned int v, unsigned int u, Node *nodes, i
         path[i] = current->nodeKey;
         current = current->prev;
     }
-//    reverseList(path, path[0]);
     return path;
 }
 
@@ -397,7 +387,6 @@ void printMessages(Node *nodes, int treeSize, Node *root, unsigned int *path)
 
 int main(int argc, char *args[])
 {
-
     if (argc != 4)
     {
         printf("%s", "Usage:  TreeAnalyzer <Graph File Path> <First Vertex> <Second Vertex>\n");
