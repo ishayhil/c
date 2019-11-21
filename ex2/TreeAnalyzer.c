@@ -9,16 +9,33 @@
 #include "queue.h"
 #define MAX_ROW_SIZE 1024
 
+/**
+ * defines a Node inside the tree.
+ */
 typedef struct Node
 {
-    unsigned int nodeKey;
-    struct Node *parentNode;
-    struct Node **children;
-    unsigned int childrenCnt;
-    unsigned int dist;
-    struct Node *prev;
+    unsigned int nodeKey; // the node's number
+    struct Node *parentNode; // a pointer to the parent node of the node, default is null
+    struct Node **children; // a pointer array to the node's children
+    unsigned int childrenCnt; // the number of children
+    unsigned int dist; // the dist - for BFS. By default is INT8_MAX (inf)
+    struct Node *prev; // previous node for BFS - recovering the path.
 } Node;
 
+const int METHOD_SUCCESS = 1;
+
+typedef enum Errors
+{
+    MALLOC_FAIL = 3,
+    INVALID_FILE,
+    INVALID_TREE_SIZE,
+    INVALID_ROW,
+    INVALID_ARG
+} ErrorCodes;
+
+/**
+ * defines a row in the input file.
+ */
 typedef struct Row
 {
     char row[MAX_ROW_SIZE];
@@ -30,14 +47,14 @@ int validateFile(char *fileName) // validates file and get number of vertex
     FILE *file = fopen(fileName, "r");
     if (!file)
     {
-        return -1; // bad file error
+        return INVALID_FILE; // bad file error
     }
     char currentRow[MAX_ROW_SIZE] = "";
     fscanf(file, "%s", currentRow);
-    fclose(file);
+    fclose(file); // closes the file
     if (strcmp(currentRow, "") <= 0)
     {
-        return -2; // if <= 0 then invalid n (should be natural number)
+        return INVALID_TREE_SIZE; // if <= 0 then invalid n (should be natural number)
     }
     else
     {
@@ -48,6 +65,10 @@ int validateFile(char *fileName) // validates file and get number of vertex
 Row *parseFile(char *fileName, int treeSize)
 {
     Row *rows = (Row *) malloc(sizeof(Row) * treeSize);
+    if (rows == NULL)
+    {
+        return NULL;
+    }
     FILE *file = fopen(fileName, "r");
     char firstRow[MAX_ROW_SIZE];
 
@@ -64,6 +85,10 @@ Row *parseFile(char *fileName, int treeSize)
 Node *generateNodes(int treeSize)
 {
     Node *nodes = (Node *) malloc(sizeof(Node) * treeSize);
+    if (nodes == NULL)
+    {
+        return NULL;
+    }
     for (int i = 0; i < treeSize; ++i)
     {
         nodes[i].nodeKey = i;
@@ -98,29 +123,33 @@ int validateTokenInt(char *token, int treeSize)
     {
         if (!isdigit(token[i]) && token[i] != '\n' && token[i] != '\r') // /r and /n are valid chars
         {
-            return -1;
+            return INVALID_ROW;
         }
     }
     int n = atoi(token);
-    return n < treeSize ? n : -1;
+    return n < treeSize ? n : INVALID_ROW;
 }
 
 int handleRow(Row row, Node *nodes, int treeSize)
 {
     if (strcmp(row.row, "\n") == 0 || strcmp(row.row, "\r\n") == 0)
     {
-        return 0; // empty line invalid
+        return INVALID_ROW; // empty line invalid
     }
 
     if (strcmp(row.row, "-") == 0 || strcmp(row.row, "-\n") == 0 || strcmp(row.row, "-\r\n") == 0)
     {
-        return 1; // leaf
+        return METHOD_SUCCESS; // leaf
     }
 
     int childrenCnt = cntChildren(row);
     nodes[row.rowNumber].childrenCnt = childrenCnt;
 
     Node **children = (Node **) malloc(childrenCnt * sizeof(Node *));
+    if (children == NULL)
+    {
+        return MALLOC_FAIL; // malloc failed
+    }
     int i = 0;
 
     char *ptr = strtok(row.row, " ");
@@ -138,7 +167,7 @@ int handleRow(Row row, Node *nodes, int treeSize)
         i++;
     }
     nodes[row.rowNumber].children = children;
-    return 1;
+    return METHOD_SUCCESS;
 }
 
 void printTree(int treeSize, Node *nodes)
@@ -175,12 +204,12 @@ int initTree(Row *rows, Node *nodes, int treeSize)
     for (int i = 0; i < treeSize; ++i)
     {
         int code = handleRow(rows[i], nodes, treeSize);
-        if (code != 1)
+        if (code == INVALID_ROW)
         {
-            return 0; // bad file
+            return INVALID_ROW; // bad file
         }
     }
-    return 1;
+    return METHOD_SUCCESS;
 }
 
 int countEdges(int treeSize)
@@ -213,7 +242,7 @@ int getTreeHeight(Node *root, int current, int isMax)
 
 unsigned int bfs(unsigned int firstNode, Node *nodes, int treeSize) // O(V + E)
 {
-    for (int i = 0; i < treeSize; ++i) // set all dist to inf
+    for (int i = 0; i < treeSize; ++i) // set all dist to INT8_MAX (inf)
     {
         nodes[i].dist = INT8_MAX;
     }
@@ -221,7 +250,7 @@ unsigned int bfs(unsigned int firstNode, Node *nodes, int treeSize) // O(V + E)
     nodes[firstNode].dist = 0;
     Queue *queue = allocQueue();
     enqueue(queue, firstNode);
-    while (!queueIsEmpty(queue))
+    while (!queueIsEmpty(queue)) // handle what's left in the queue
     {
         Node *node = &nodes[dequeue(queue)];
         for (unsigned int i = 0; i < node->childrenCnt; ++i) // handle children nodes
@@ -243,7 +272,7 @@ unsigned int bfs(unsigned int firstNode, Node *nodes, int treeSize) // O(V + E)
             }
         }
     }
-    unsigned int max = 0; // extract the highest dest
+    unsigned int max = 0; // extract the highest dist
     for (int i = 0; i < treeSize; ++i)
     {
         if (nodes[i].dist > max)
@@ -251,10 +280,11 @@ unsigned int bfs(unsigned int firstNode, Node *nodes, int treeSize) // O(V + E)
             max = nodes[i].dist;
         }
     }
+    freeQueue(&queue);
     return max;
 }
 
-unsigned int getTreeWidth(Node *nodes, int treeSize) // O(n^2)
+unsigned int getTreeDiameter(Node *nodes, int treeSize) // O(n^2)
 {
     unsigned int max = 0;
     unsigned int res;
@@ -270,7 +300,7 @@ unsigned int getTreeWidth(Node *nodes, int treeSize) // O(n^2)
 
 void reverseList(unsigned int *lst, unsigned int len)
 {
-    for (unsigned int i = 0; i < len / 2; ++i)
+    for (unsigned int i = 1; i < len / 2; ++i)
     {
         unsigned int temp = lst[i];
         lst[i] = lst[len - i - 1];
@@ -278,61 +308,137 @@ void reverseList(unsigned int *lst, unsigned int len)
     }
 }
 
-void printPathBetweenNode(unsigned int v, unsigned int u, Node *nodes, int treeSize) // O(n)
+unsigned int *getPathBetweenNodes(unsigned int v, unsigned int u, Node *nodes, int treeSize) // O(n)
 {
-    bfs(v, nodes, treeSize);
+    bfs(v, nodes, treeSize); // inits the dist between v and all nodes
     unsigned int dist = nodes[u].dist;
     Node *current = &nodes[u];
-    unsigned int *path = (unsigned int *) malloc((dist + 1) * sizeof(unsigned int));
+    unsigned int *path = (unsigned int *) malloc((dist + 2) * sizeof(unsigned int));
+    if (path == NULL)
+    {
+        return NULL;
+    }
 
-    for (unsigned int i = 0; i < dist + 1; ++i)
+    path[0] = dist + 2;
+    for (unsigned int i = 1; i < path[0]; ++i)
     {
         path[i] = current->nodeKey;
         current = current->prev;
     }
-    reverseList(path, dist + 1);
-    for (unsigned int j = 0; j < dist + 1; ++j)
-    {
-        printf("%d ", path[j]);
-    }
+//    reverseList(path, path[0]);
+    return path;
+}
 
+int invalidInput()
+{
+    printf("Invalid input\n");
+    return EXIT_FAILURE;
+}
+
+void freeTree(Node *nodes, int treeSize)
+{
+    for (int i = 0; i < treeSize; ++i)
+    {
+        free(nodes[i].children);
+        nodes[i].children = NULL;
+    }
+    free(nodes);
+}
+
+int validateArgs(char *args[])
+{
+    for (int i = 2; i < 4; ++i)
+    {
+        for (int j = 0; j < (int) strlen(args[i]); ++j)
+        {
+            if (!isdigit(args[i][j]))
+            {
+                return INVALID_ARG;
+            }
+        }
+    }
+    return METHOD_SUCCESS;
+}
+
+void printPath(unsigned int *path)
+{
+    printf("%s", "Shortest Path Between 4 and 3: ");
+    int len = (int) path[0];
+    for (int i = len - 1; i > 0; --i)
+    {
+        if (i == 1)
+        {
+            printf("%d", path[i]);
+        }
+        else
+        {
+            printf("%d ", path[i]);
+        }
+    }
     free(path);
 }
 
-int main()
+void printMessages(Node *nodes, int treeSize, Node *root, unsigned int *path)
 {
-    int treeSize = validateFile("/Users/ishayhil/huji/c/ex2/test.in");
-    if (treeSize <= 0)
+    int vertices = treeSize;
+    int edges = countEdges(vertices);
+    int minBranch = getTreeHeight(root, 0, 0);
+    int maxBranch = getTreeHeight(root, 0, 1);
+    unsigned int diameter = getTreeDiameter(nodes, treeSize);
+
+    printf("Root Vertex: %d\n", root->nodeKey);
+    printf("Vertices Count: %d\n", vertices);
+    printf("Edges Count: %d\n", edges);
+    printf("Length of Minimal Branch: %d\n", minBranch);
+    printf("Length of Maximal Branch: %d\n", maxBranch);
+    printf("Diameter Length: %d\n", diameter);
+    printPath(path);
+}
+
+int main(int argc, char *args[])
+{
+
+    if (argc != 4)
     {
-        return 1; // invalid tree size
+        printf("%s", "Usage:  TreeAnalyzer <Graph File Path> <First Vertex> <Second Vertex>\n");
+        return EXIT_FAILURE;
     }
-    Row *rows = parseFile("/Users/ishayhil/huji/c/ex2/test.in", treeSize);
+    else if (!validateArgs(args))
+    {
+        return invalidInput();
+    }
+
+    int treeSize = validateFile(args[1]);
+    if (treeSize == INVALID_TREE_SIZE)
+    {
+        return invalidInput(); // invalid tree size
+    }
+    Row *rows = parseFile(args[1], treeSize);
     Node *nodes = generateNodes(treeSize);
 
     int res = initTree(rows, nodes, treeSize);
-    if (!res)
+    if (res == INVALID_ROW)
     {
-        printf("%s", "Invalid input\n");
-        return 2; // invalid input file
+        return invalidInput();
     }
 
     Node *root = getRoot(nodes, treeSize);
     if (root == NULL)
     {
-        printf("%s", "Invalid input\n");
-        return 2; // more than 1 root
+        return invalidInput();
     }
-    int edges = countEdges(treeSize);
-    printf("root: %d\n", root->nodeKey);
-    printf("edges: %d\n", edges);
-    int max = getTreeHeight(root, 0, 1);
-    int min = getTreeHeight(root, 0, 0);
-    printf("max height: %d\n", max);
-    printf("min height: %d\n", min);
-    unsigned int treeW = getTreeWidth(nodes, treeSize);
-    printf("tree width: %d\n", treeW);
 
-    printPathBetweenNode(1, 6, nodes, treeSize);
+    // already verified to be legit:
+    int v = atoi(args[2]);
+    int u = atoi(args[3]);
+    unsigned int *path = getPathBetweenNodes(v, u, nodes, treeSize);
+    if (path == NULL)
+    {
+        return invalidInput();
+    }
+    printMessages(nodes, treeSize, root, path);
 
-    return 0;
+    freeTree(nodes, treeSize);
+
+    return EXIT_SUCCESS;
 }
