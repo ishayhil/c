@@ -319,12 +319,6 @@ unsigned int *getPathBetweenNodes(unsigned int v, unsigned int u, Node *nodes, i
     return path;
 }
 
-int invalidInput()
-{
-    printf("Invalid input\n");
-    return EXIT_FAILURE;
-}
-
 void freeTree(Node *nodes, int treeSize)
 {
     for (int i = 0; i < treeSize; ++i)
@@ -333,6 +327,16 @@ void freeTree(Node *nodes, int treeSize)
         nodes[i].children = NULL;
     }
     free(nodes);
+}
+
+int invalidInput(Node *nodes, int treeSize)
+{
+    printf("Invalid input\n");
+    if (treeSize > 0)
+    {
+        freeTree(nodes, treeSize);
+    }
+    return EXIT_FAILURE;
 }
 
 int validateArgs(char *args[])
@@ -365,7 +369,6 @@ void printPath(unsigned int *path)
             printf("%d ", path[i]);
         }
     }
-    free(path);
 }
 
 void printMessages(Node *nodes, int treeSize, Node *root, unsigned int *path)
@@ -383,6 +386,7 @@ void printMessages(Node *nodes, int treeSize, Node *root, unsigned int *path)
     printf("Length of Maximal Branch: %d\n", maxBranch);
     printf("Diameter Length: %d\n", diameter);
     printPath(path);
+    free(path);
 }
 
 int main(int argc, char *args[])
@@ -394,27 +398,28 @@ int main(int argc, char *args[])
     }
     else if (!validateArgs(args))
     {
-        return invalidInput();
+        return invalidInput(NULL, 0);
     }
 
     int treeSize = validateFile(args[1]);
     if (treeSize == INVALID_TREE_SIZE)
     {
-        return invalidInput(); // invalid tree size
+        return invalidInput(NULL, 0); // invalid tree size
     }
     Row *rows = parseFile(args[1], treeSize);
     Node *nodes = generateNodes(treeSize);
 
     int res = initTree(rows, nodes, treeSize);
+    free(rows);
     if (res == INVALID_ROW)
     {
-        return invalidInput();
+        return invalidInput(nodes, treeSize);
     }
 
     Node *root = getRoot(nodes, treeSize);
     if (root == NULL)
     {
-        return invalidInput();
+        return invalidInput(nodes, treeSize);
     }
 
     // already verified to be legit:
@@ -423,11 +428,12 @@ int main(int argc, char *args[])
     unsigned int *path = getPathBetweenNodes(v, u, nodes, treeSize);
     if (path == NULL)
     {
-        return invalidInput();
+        return invalidInput(nodes, treeSize);
     }
     printMessages(nodes, treeSize, root, path);
 
     freeTree(nodes, treeSize);
+    nodes = NULL;
 
     return EXIT_SUCCESS;
 }
