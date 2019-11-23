@@ -26,6 +26,16 @@
 #define MAX_ROW_SIZE 1025 // max row size (1024 chars).
 
 /**
+ * invalid input msg
+ */
+const char INVALID_INPUT[] = "Invalid input\n";
+
+/**
+ * invalid usage msg
+ */
+const char INVALID_USAGE[] = "Usage:  TreeAnalyzer <Graph File Path> <First Vertex> <Second Vertex>\n";
+
+/**
  * defines a Node inside the tree.
  */
 typedef struct Node
@@ -424,7 +434,7 @@ void freeTree(Node *nodes, int treeSize)
  */
 int invalidInput(Node *nodes, int treeSize)
 {
-    printf("Invalid input\n");
+    perror(INVALID_INPUT);
     if (treeSize > 0)
     {
         freeTree(nodes, treeSize);
@@ -508,7 +518,7 @@ int main(int argc, char *args[])
 {
     if (argc != 4) // <program name> <file path> <v> <u>
     {
-        printf("%s", "Usage:  TreeAnalyzer <Graph File Path> <First Vertex> <Second Vertex>\n");
+        perror(INVALID_USAGE);
         return EXIT_FAILURE;
     }
     else if (!validateArgs(args))
