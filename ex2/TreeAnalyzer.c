@@ -28,7 +28,7 @@
 /**
  * invalid input msg
  */
-const char INVALID_INPUT[] = "Invalid input\n";
+const char INVALID_INPUT[] = "Invalid input\r\n";
 
 /**
  * invalid usage msg
@@ -96,27 +96,8 @@ int validateFile(char *fileName) // validates file and get number of vertex
     }
     else
     {
-        return atoi(currentRow);
+        return (int) strtol(currentRow, NULL, 10);
     }
-}
-
-/**
- * removes spaces
- * @param s source
- */
-char *removeSpaces(char *input)
-{
-    int i, j;
-    char *output = input;
-    for (i = 0, j = 0; i < (int) strlen(input); i++, j++)
-    {
-        if (input[i] != ' ' || input[i] != '\n')
-            output[j] = input[i];
-        else
-            j--;
-    }
-    output[j] = 0;
-    return output;
 }
 
 /**
@@ -593,9 +574,10 @@ int main(int argc, char *args[])
     }
 
     // already verified to be legit numeric:
-    int v = atoi(args[2]);
-    int u = atoi(args[3]);
-    if (v < 0 || u < 0 || v >= treeSize || u >= treeSize) {
+    int v = (int) strtol(args[2], NULL, 10);
+    int u = (int) strtol(args[3], NULL, 10);
+    if (v < 0 || u < 0 || v >= treeSize || u >= treeSize)
+    {
         return invalidInput(nodes, treeSize);
     }
 
