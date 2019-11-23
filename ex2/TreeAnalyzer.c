@@ -565,7 +565,7 @@ int main(int argc, char *args[])
         fprintf(stderr, "%s", INVALID_USAGE);
         return EXIT_FAILURE;
     }
-    else if (!validateArgs(args))
+    else if (validateArgs(args) == INVALID_ARG)
     {
         return invalidInput(NULL, 0);
     }
