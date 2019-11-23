@@ -511,7 +511,7 @@ void printMessages(Node *nodes, int treeSize, Node *root, unsigned int *path)
  */
 int main(int argc, char *args[])
 {
-//    if (argc != 4) // <program name> <file path> <v> <u>
+    if (argc != 4) // <program name> <file path> <v> <u>
     {
         printf("%s", "Usage:  TreeAnalyzer <Graph File Path> <First Vertex> <Second Vertex>\n");
         return EXIT_FAILURE;
