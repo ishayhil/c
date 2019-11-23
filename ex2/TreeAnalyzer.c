@@ -28,7 +28,7 @@
 /**
  * invalid input msg
  */
-const char INVALID_INPUT[] = "Invalid input\r\n";
+const char INVALID_INPUT[] = "Invalid input\n";
 
 /**
  * invalid usage msg
