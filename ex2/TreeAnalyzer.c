@@ -69,11 +69,13 @@ typedef enum Errors
 /**
  * defines a row in the input file.
  */
-typedef struct Row
+struct _Row
 {
     char row[MAX_ROW_SIZE];
     int rowNumber;
-} Row;
+} DefaultRow = {"", -1};
+
+typedef struct _Row Row;
 
 /**
  * Frees the tree malloc
@@ -122,6 +124,12 @@ Row *parseFile(char *fileName, int treeSize)
     {
         return NULL;
     }
+
+    for (int i = 0; i < treeSize; ++i) // assigning default values for later validity checks
+    {
+        rows[i] = DefaultRow;
+    }
+
     FILE *file = fopen(fileName, "r");
     char firstRow[MAX_ROW_SIZE];
 
@@ -296,6 +304,10 @@ int initTree(Row *rows, Node *nodes, int treeSize)
 {
     for (int i = 0; i < treeSize; ++i)
     {
+        if (rows[i].rowNumber == -1) // not inited for some reason.
+        {
+            return INVALID_ROW;
+        }
         char *temp = (char *) malloc((strlen(rows[i].row) + 1) * sizeof(char));
         int code = handleRow(&rows[i], nodes, treeSize, temp);
         free(temp);
@@ -505,13 +517,12 @@ void printPath(unsigned int *path, int v, int u)
  * @param root
  * @param path
  */
-void printMessages(Node *nodes, int treeSize, Node *root, unsigned int *path, int v, int u)
+void printMessages(Node *nodes, int treeSize, Node *root, unsigned int *path, int v, int u, unsigned int diameter)
 {
     int vertices = treeSize;
     int edges = countEdges(vertices);
     unsigned int minBranch = getTreeHeight(root->nodeKey, nodes, treeSize, 0);
     unsigned int maxBranch = getTreeHeight(root->nodeKey, nodes, treeSize, 1);
-    unsigned int diameter = getTreeDiameter(nodes, treeSize);
 
     printf("Root Vertex: %d\n", root->nodeKey);
     printf("Vertices Count: %d\n", vertices);
@@ -576,7 +587,14 @@ int main(int argc, char *args[])
     {
         return invalidInput(nodes, treeSize);
     }
-    printMessages(nodes, treeSize, root, path, v, u);
+
+    unsigned int treeDiameter = getTreeDiameter(nodes, treeSize);
+    if (treeDiameter == INT_MAX)
+    { // more than 1 connectivity component
+        return invalidInput(nodes, treeSize);
+    }
+
+    printMessages(nodes, treeSize, root, path, v, u, treeDiameter);
 
     freeTree(nodes, treeSize);
     nodes = NULL;
