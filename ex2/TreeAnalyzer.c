@@ -23,7 +23,7 @@
 #include <ctype.h>
 #include <limits.h>
 #include "queue.h"
-#define MAX_ROW_SIZE 1024
+#define MAX_ROW_SIZE 1025 // max row size (1024 chars).
 
 /**
  * defines a Node inside the tree.
@@ -309,22 +309,22 @@ int getTreeHeight(Node *root, int current, int isMax)
 }
 
 /**
- *
- * @param firstNode
+ * performing a bfs on a given node.
+ * @param theNode the given node
  * @param nodes
  * @param treeSize
- * @return
+ * @return the max distance from the given
  */
-unsigned int bfs(unsigned int firstNode, Node *nodes, int treeSize) // O(V + E)
+unsigned int bfs(unsigned int theNode, Node *nodes, int treeSize) // O(V + E)
 {
     for (int i = 0; i < treeSize; ++i) // set all dist to INT8_MAX (inf)
     {
         nodes[i].dist = INT_MAX;
     }
 
-    nodes[firstNode].dist = 0;
+    nodes[theNode].dist = 0;
     Queue *queue = allocQueue();
-    enqueue(queue, firstNode);
+    enqueue(queue, theNode);
     while (!queueIsEmpty(queue)) // handle what's left in the queue
     {
         Node *node = &nodes[dequeue(queue)];
@@ -337,7 +337,7 @@ unsigned int bfs(unsigned int firstNode, Node *nodes, int treeSize) // O(V + E)
                 node->children[i]->prev = node;
             }
         }
-        if (node->parentNode != NULL) // handle parent node
+        if (node->parentNode != NULL) // handle parent theNode
         {
             if (node->parentNode->dist == INT_MAX)
             {
@@ -359,6 +359,11 @@ unsigned int bfs(unsigned int firstNode, Node *nodes, int treeSize) // O(V + E)
     return max;
 }
 
+/**
+ * @param nodes
+ * @param treeSize
+ * @return returns the tree diameter
+ */
 unsigned int getTreeDiameter(Node *nodes, int treeSize) // O(n^2)
 {
     unsigned int max = 0;
@@ -373,6 +378,14 @@ unsigned int getTreeDiameter(Node *nodes, int treeSize) // O(n^2)
     return max;
 }
 
+/**
+ * using bfs. O(n) run time.
+ * @param v
+ * @param u
+ * @param nodes
+ * @param treeSize
+ * @return Returns a pointer to an int array represents the path from u to v.
+ */
 unsigned int *getPathBetweenNodes(unsigned int v, unsigned int u, Node *nodes, int treeSize) // O(n)
 {
     bfs(v, nodes, treeSize); // inits the dist between v and all nodes
@@ -393,6 +406,11 @@ unsigned int *getPathBetweenNodes(unsigned int v, unsigned int u, Node *nodes, i
     return path;
 }
 
+/**
+ * Frees the tree malloc
+ * @param nodes
+ * @param treeSize
+ */
 void freeTree(Node *nodes, int treeSize)
 {
     for (int i = 0; i < treeSize; ++i)
@@ -403,6 +421,12 @@ void freeTree(Node *nodes, int treeSize)
     free(nodes);
 }
 
+/**
+ * prints invalid input message.
+ * @param nodes
+ * @param treeSize
+ * @return EXIT_FAILURE
+ */
 int invalidInput(Node *nodes, int treeSize)
 {
     printf("Invalid input\n");
@@ -413,6 +437,11 @@ int invalidInput(Node *nodes, int treeSize)
     return EXIT_FAILURE;
 }
 
+/**
+ * validates the args.
+ * @param args
+ * @return METHOD_SUCCESS is valid, INVALID_ARG if invalid.
+ */
 int validateArgs(char *args[])
 {
     for (int i = 2; i < 4; ++i)
@@ -428,6 +457,10 @@ int validateArgs(char *args[])
     return METHOD_SUCCESS;
 }
 
+/**
+ * prints the path from v to u
+ * @param path the path from u to v
+ */
 void printPath(unsigned int *path)
 {
     printf("%s", "Shortest Path Between 4 and 3: ");
@@ -445,6 +478,13 @@ void printPath(unsigned int *path)
     }
 }
 
+/**
+ * prints out the matching messages to stdout..
+ * @param nodes
+ * @param treeSize
+ * @param root
+ * @param path
+ */
 void printMessages(Node *nodes, int treeSize, Node *root, unsigned int *path)
 {
     int vertices = treeSize;
@@ -463,9 +503,15 @@ void printMessages(Node *nodes, int treeSize, Node *root, unsigned int *path)
     free(path);
 }
 
+/**
+ * the main function
+ * @param argc args count
+ * @param args
+ * @return EXIT_FAILURE if program fails, EXIT_SUCCESS otherwise.
+ */
 int main(int argc, char *args[])
 {
-    if (argc != 4)
+//    if (argc != 4) // <program name> <file path> <v> <u>
     {
         printf("%s", "Usage:  TreeAnalyzer <Graph File Path> <First Vertex> <Second Vertex>\n");
         return EXIT_FAILURE;
