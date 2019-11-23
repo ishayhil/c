@@ -33,7 +33,7 @@ const char INVALID_INPUT[] = "Invalid input\n";
 /**
  * invalid usage msg
  */
-const char INVALID_USAGE[] = "Usage:  TreeAnalyzer <Graph File Path> <First Vertex> <Second Vertex>\n";
+const char INVALID_USAGE[] = "Usage: TreeAnalyzer <Graph File Path> <First Vertex> <Second Vertex>\n";
 
 /**
  * defines a Node inside the tree.
