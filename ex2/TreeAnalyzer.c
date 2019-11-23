@@ -169,7 +169,7 @@ int cntChildren(Row *row)
     char *temp = (char *) malloc(sizeof(char) * (strlen(row->row) + 1));
     strcpy(temp, row->row);
 
-    if (strcmp(temp, "-") == 0)
+    if (strcmp(temp, "-") == 0 || strcmp(temp, "-\r\n") == 0 || strcmp(temp, "-\n") == 0)
     {
         return 0;
     }
@@ -216,7 +216,7 @@ int validateTokenInt(char *token, int treeSize)
  * @param treeSize
  * @return success/failure code
  */
-int handleRow(Row *row, Node *nodes, int treeSize)
+int handleRow(Row *row, Node *nodes, int treeSize, char *temp)
 {
     if (strcmp(row->row, "\n") == 0 || strcmp(row->row, "\r\n") == 0)
     {
@@ -238,7 +238,6 @@ int handleRow(Row *row, Node *nodes, int treeSize)
     }
 
     int i = 0;
-    char *temp = (char *) malloc(sizeof(char) * (strlen(row->row) + 1));
     strcpy(temp, row->row);
     char *ptr = strtok(temp, " \n\t\r");
 
@@ -247,18 +246,15 @@ int handleRow(Row *row, Node *nodes, int treeSize)
         int num = validateTokenInt(ptr, treeSize);
         if (num == INVALID_ROW)
         {
-            free(temp);
             return INVALID_ROW;
         }
         else if (num == VALID_TOKEN_NOT_ADD)
         {
-            free(temp);
             return METHOD_SUCCESS;
         }
 
         if (num < 0 || nodes[num].parentNode != NULL || num == row->rowNumber)
         {
-            free(temp);
             return INVALID_ROW; // invalid token (size or not pos int) OR node already has parent (then not tree) OR node parent is itself
         }
         nodes[num].parentNode = &nodes[row->rowNumber]; // set parent node for child
@@ -267,7 +263,6 @@ int handleRow(Row *row, Node *nodes, int treeSize)
         i++;
     }
     nodes[row->rowNumber].children = children;
-    free(temp);
     return METHOD_SUCCESS;
 }
 
@@ -302,7 +297,9 @@ int initTree(Row *rows, Node *nodes, int treeSize)
 {
     for (int i = 0; i < treeSize; ++i)
     {
-        int code = handleRow(&rows[i], nodes, treeSize);
+        char *temp = (char *) malloc((strlen(rows[i].row) + 1) * sizeof(char));
+        int code = handleRow(&rows[i], nodes, treeSize, temp);
+        free(temp);
         if (code == INVALID_ROW)
         {
             return INVALID_ROW; // bad file
@@ -447,7 +444,6 @@ unsigned int *getPathBetweenNodes(unsigned int v, unsigned int u, Node *nodes, i
     }
     return path;
 }
-
 
 /**
  * prints invalid input message.
