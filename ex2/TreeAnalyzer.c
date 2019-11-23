@@ -76,6 +76,21 @@ typedef struct Row
 } Row;
 
 /**
+ * Frees the tree malloc
+ * @param nodes
+ * @param treeSize
+ */
+void freeTree(Node *nodes, int treeSize)
+{
+    for (int i = 0; i < treeSize; ++i)
+    {
+        free(nodes[i].children);
+        nodes[i].children = NULL;
+    }
+    free(nodes);
+}
+
+/**
  * Validates that the fail is legit. If so, returns the int of the first line (nodes count).
  * @param fileName  the file path
  * @return error code if the file is not legit, the number of nodes if legit.
@@ -232,6 +247,7 @@ int handleRow(Row *row, Node *nodes, int treeSize)
         int num = validateTokenInt(ptr, treeSize);
         if (num == INVALID_ROW)
         {
+            free(temp);
             return INVALID_ROW;
         }
         else if (num == VALID_TOKEN_NOT_ADD)
@@ -241,6 +257,7 @@ int handleRow(Row *row, Node *nodes, int treeSize)
 
         if (num < 0 || nodes[num].parentNode != NULL || num == row->rowNumber)
         {
+            free(temp);
             return INVALID_ROW; // invalid token (size or not pos int) OR node already has parent (then not tree) OR node parent is itself
         }
         nodes[num].parentNode = &nodes[row->rowNumber]; // set parent node for child
@@ -430,20 +447,6 @@ unsigned int *getPathBetweenNodes(unsigned int v, unsigned int u, Node *nodes, i
     return path;
 }
 
-/**
- * Frees the tree malloc
- * @param nodes
- * @param treeSize
- */
-void freeTree(Node *nodes, int treeSize)
-{
-    for (int i = 0; i < treeSize; ++i)
-    {
-        free(nodes[i].children);
-        nodes[i].children = NULL;
-    }
-    free(nodes);
-}
 
 /**
  * prints invalid input message.
