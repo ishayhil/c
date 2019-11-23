@@ -274,41 +274,6 @@ int countEdges(int treeSize)
 }
 
 /**
- * Operator for the getTreeHeight (max/min).
- * @param a
- * @param b
- * @param isMax 1 if max 0 else
- */
-int heightOperator(int a, int b, int isMax)
-{
-    return isMax ? a > b : a < b;
-}
-
-/**
- * @param root of every subtree.
- * @param current current node for recursive call.
- * @param isMax 1 if max 0 else.
- * @return the tree height (max or min).
- */
-int getTreeHeight(Node *root, int current, int isMax)
-{
-    if (root->childrenCnt == 0)
-    {
-        return current;
-    }
-    int bestForNode = isMax ? INT_MIN : INT_MAX;
-    for (unsigned int i = 0; i < root->childrenCnt; ++i)
-    {
-        int this = getTreeHeight(root->children[i], current + 1, isMax);
-        if (heightOperator(current, bestForNode, isMax))
-        {
-            bestForNode = this;
-        }
-    }
-    return bestForNode;
-}
-
-/**
  * performing a bfs on a given node.
  * @param theNode the given node
  * @param nodes
@@ -347,16 +312,46 @@ unsigned int bfs(unsigned int theNode, Node *nodes, int treeSize) // O(V + E)
             }
         }
     }
-    unsigned int max = 0; // extract the highest dist
+    unsigned int best = 0; // extract the highest dist
     for (int i = 0; i < treeSize; ++i)
     {
-        if (nodes[i].dist > max)
+        if (nodes[i].dist > best)
         {
-            max = nodes[i].dist;
+            best = nodes[i].dist;
         }
     }
     freeQueue(&queue);
-    return max;
+    return best;
+}
+
+/**
+ * @param rootKey
+ * @param nodes
+ * @param treeSize
+ * @param isMax 1 if get max, 0 otherwise
+ * @return the min/max tree height.
+ */
+unsigned int getTreeHeight(int rootKey, Node *nodes, int treeSize, int isMax)
+{
+    if (nodes[rootKey].childrenCnt == 0)
+    {
+        return 0;
+    }
+    unsigned max = bfs(rootKey, nodes, treeSize);
+    if (isMax)
+    {
+        return max;
+    }
+
+    unsigned int min = INT_MAX;
+    for (int i = 0; i < treeSize; ++i)
+    {
+        if (nodes[i].dist < min && nodes[i].childrenCnt == 0) // leaf and < min
+        {
+            min = nodes[i].dist;
+        }
+    }
+    return min;
 }
 
 /**
@@ -489,8 +484,8 @@ void printMessages(Node *nodes, int treeSize, Node *root, unsigned int *path)
 {
     int vertices = treeSize;
     int edges = countEdges(vertices);
-    int minBranch = getTreeHeight(root, 0, 0);
-    int maxBranch = getTreeHeight(root, 0, 1);
+    unsigned int minBranch = getTreeHeight(root->nodeKey, nodes, treeSize, 0);
+    unsigned int maxBranch = getTreeHeight(root->nodeKey, nodes, treeSize, 1);
     unsigned int diameter = getTreeDiameter(nodes, treeSize);
 
     printf("Root Vertex: %d\n", root->nodeKey);
