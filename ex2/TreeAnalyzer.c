@@ -518,7 +518,7 @@ void printPath(unsigned int *path, int v, int u)
     {
         if (i == 1)
         {
-            printf("%d", path[i]);
+            printf("%d\n", path[i]);
         }
         else
         {
