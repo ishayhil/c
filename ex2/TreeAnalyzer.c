@@ -151,7 +151,7 @@ Node *initNodes(int treeSize)
 int cntChildren(Row *row)
 {
 
-    char *temp = (char *) malloc(sizeof(char) * strlen(row->row));
+    char *temp = (char *) malloc(sizeof(char) * (strlen(row->row) + 1));
     strcpy(temp, row->row);
 
     if (strcmp(temp, "-") == 0)
@@ -223,7 +223,7 @@ int handleRow(Row *row, Node *nodes, int treeSize)
     }
 
     int i = 0;
-    char *temp = (char *) malloc(sizeof(char) * strlen(row->row));
+    char *temp = (char *) malloc(sizeof(char) * (strlen(row->row) + 1));
     strcpy(temp, row->row);
     char *ptr = strtok(temp, " \n\t\r");
 
