@@ -466,9 +466,9 @@ int validateArgs(char *args[])
  * prints the path from v to u
  * @param path the path from u to v
  */
-void printPath(unsigned int *path)
+void printPath(unsigned int *path, int v, int u)
 {
-    printf("%s", "Shortest Path Between 4 and 3: ");
+    printf("Shortest Path Between %d and %d: ", v, u);
     int len = (int) path[0];
     for (int i = len - 1; i > 0; --i)
     {
@@ -490,7 +490,7 @@ void printPath(unsigned int *path)
  * @param root
  * @param path
  */
-void printMessages(Node *nodes, int treeSize, Node *root, unsigned int *path)
+void printMessages(Node *nodes, int treeSize, Node *root, unsigned int *path, int v, int u)
 {
     int vertices = treeSize;
     int edges = countEdges(vertices);
@@ -504,7 +504,7 @@ void printMessages(Node *nodes, int treeSize, Node *root, unsigned int *path)
     printf("Length of Minimal Branch: %d\n", minBranch);
     printf("Length of Maximal Branch: %d\n", maxBranch);
     printf("Diameter Length: %d\n", diameter);
-    printPath(path);
+    printPath(path, v, u);
     free(path);
 }
 
@@ -555,7 +555,7 @@ int main(int argc, char *args[])
     {
         return invalidInput(nodes, treeSize);
     }
-    printMessages(nodes, treeSize, root, path);
+    printMessages(nodes, treeSize, root, path, v, u);
 
     freeTree(nodes, treeSize);
     nodes = NULL;
