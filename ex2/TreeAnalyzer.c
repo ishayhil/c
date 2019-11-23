@@ -434,7 +434,7 @@ void freeTree(Node *nodes, int treeSize)
  */
 int invalidInput(Node *nodes, int treeSize)
 {
-    perror(INVALID_INPUT);
+    fprintf(stderr, "%s", INVALID_INPUT);
     if (treeSize > 0)
     {
         freeTree(nodes, treeSize);
@@ -518,7 +518,7 @@ int main(int argc, char *args[])
 {
     if (argc != 4) // <program name> <file path> <v> <u>
     {
-        perror(INVALID_USAGE);
+        fprintf(stderr, "%s", INVALID_USAGE);
         return EXIT_FAILURE;
     }
     else if (!validateArgs(args))
