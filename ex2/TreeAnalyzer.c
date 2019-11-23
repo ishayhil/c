@@ -90,14 +90,8 @@ int validateFile(char *fileName) // validates file and get number of vertex
     char currentRow[MAX_ROW_SIZE] = "";
     fscanf(file, "%s", currentRow);
     fclose(file); // closes the file
-    if (strcmp(currentRow, "") <= 0)
-    {
-        return INVALID_TREE_SIZE; // if <= 0 then invalid n (should be natural number)
-    }
-    else
-    {
-        return (int) strtol(currentRow, NULL, 10);
-    }
+    int n = (int) strtol(currentRow, NULL, 10);
+    return n > 0 ? n : INVALID_TREE_SIZE;
 }
 
 /**
