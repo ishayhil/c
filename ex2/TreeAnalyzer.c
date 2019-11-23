@@ -58,7 +58,8 @@ const int METHOD_SUCCESS = 1;
  */
 typedef enum Errors
 {
-    MALLOC_FAIL = 3,
+    VALID_TOKEN_NOT_ADD = -11,
+    MALLOC_FAIL,
     INVALID_FILE,
     INVALID_TREE_SIZE,
     INVALID_ROW,
@@ -97,6 +98,25 @@ int validateFile(char *fileName) // validates file and get number of vertex
     {
         return atoi(currentRow);
     }
+}
+
+/**
+ * removes spaces
+ * @param s source
+ */
+char *removeSpaces(char *input)
+{
+    int i, j;
+    char *output = input;
+    for (i = 0, j = 0; i < (int) strlen(input); i++, j++)
+    {
+        if (input[i] != ' ' || input[i] != '\n')
+            output[j] = input[i];
+        else
+            j--;
+    }
+    output[j] = 0;
+    return output;
 }
 
 /**
@@ -153,19 +173,24 @@ Node *initNodes(int treeSize)
  * @param row of type Row
  * @return the number of children for the node.
  */
-int cntChildren(Row row)
+int cntChildren(Row *row)
 {
-    if (strcmp(row.row, "-") == 0)
+
+    char *temp = (char *) malloc(sizeof(char) * strlen(row->row));
+    strcpy(temp, row->row);
+
+    if (strcmp(temp, "-") == 0)
     {
         return 0;
     }
     int childrenCnt = 0;
-    char *ptr = strtok(row.row, " ");
+    char *ptr = strtok(temp, " \n\t\r");
     while (ptr != NULL)
     {
         childrenCnt++;
-        ptr = strtok(NULL, " ");
+        ptr = strtok(NULL, " \n\t\r");
     }
+    free(temp);
     return childrenCnt;
 }
 
@@ -176,6 +201,11 @@ int cntChildren(Row row)
  */
 int validateTokenInt(char *token, int treeSize)
 {
+    if (strlen(token) == 0)
+    {
+        return INVALID_ROW;
+    }
+
     for (int i = 0; i < (int) strlen(token); ++i)
     {
         if (!isdigit(token[i]) && token[i] != '\n' && token[i] != '\r') // /r and /n are valid chars
@@ -183,7 +213,8 @@ int validateTokenInt(char *token, int treeSize)
             return INVALID_ROW;
         }
     }
-    int n = atoi(token);
+
+    int n = (int) strtol(token, NULL, 10);
     return n < treeSize ? n : INVALID_ROW;
 }
 
@@ -195,42 +226,55 @@ int validateTokenInt(char *token, int treeSize)
  * @param treeSize
  * @return success/failure code
  */
-int handleRow(Row row, Node *nodes, int treeSize)
+int handleRow(Row *row, Node *nodes, int treeSize)
 {
-    if (strcmp(row.row, "\n") == 0 || strcmp(row.row, "\r\n") == 0)
+    if (strcmp(row->row, "\n") == 0 || strcmp(row->row, "\r\n") == 0)
     {
         return INVALID_ROW; // empty line invalid
     }
 
-    if (strcmp(row.row, "-") == 0 || strcmp(row.row, "-\n") == 0 || strcmp(row.row, "-\r\n") == 0)
+    if (strcmp(row->row, "-") == 0 || strcmp(row->row, "-\n") == 0 || strcmp(row->row, "-\r\n") == 0)
     {
         return METHOD_SUCCESS; // leaf
     }
 
     int childrenCnt = cntChildren(row);
-    nodes[row.rowNumber].childrenCnt = childrenCnt;
+    nodes[row->rowNumber].childrenCnt = childrenCnt;
 
     Node **children = (Node **) malloc(childrenCnt * sizeof(Node *));
     if (children == NULL)
     {
         return MALLOC_FAIL; // malloc failed
     }
-    int i = 0;
 
-    char *ptr = strtok(row.row, " ");
+    int i = 0;
+    char *temp = (char *) malloc(sizeof(char) * strlen(row->row));
+    strcpy(temp, row->row);
+    char *ptr = strtok(temp, " \n\t\r");
+
     while (ptr != NULL)
     {
         int num = validateTokenInt(ptr, treeSize);
-        if (num < 0 || nodes[num].parentNode != NULL || num == row.rowNumber)
+        if (num == INVALID_ROW)
+        {
+            return INVALID_ROW;
+        }
+        else if (num == VALID_TOKEN_NOT_ADD)
+        {
+            return METHOD_SUCCESS;
+        }
+
+        if (num < 0 || nodes[num].parentNode != NULL || num == row->rowNumber)
         {
             return INVALID_ROW; // invalid token (size or not pos int) OR node already has parent (then not tree) OR node parent is itself
         }
-        nodes[num].parentNode = &nodes[row.rowNumber]; // set parent node for child
+        nodes[num].parentNode = &nodes[row->rowNumber]; // set parent node for child
         children[i] = &nodes[num]; // add child to current node
-        ptr = strtok(NULL, " ");
+        ptr = strtok(NULL, " \n\t\r");
         i++;
     }
-    nodes[row.rowNumber].children = children;
+    nodes[row->rowNumber].children = children;
+    free(temp);
     return METHOD_SUCCESS;
 }
 
@@ -265,7 +309,7 @@ int initTree(Row *rows, Node *nodes, int treeSize)
 {
     for (int i = 0; i < treeSize; ++i)
     {
-        int code = handleRow(rows[i], nodes, treeSize);
+        int code = handleRow(&rows[i], nodes, treeSize);
         if (code == INVALID_ROW)
         {
             return INVALID_ROW; // bad file
@@ -527,11 +571,12 @@ int main(int argc, char *args[])
     }
 
     int treeSize = validateFile(args[1]);
-    if (treeSize == INVALID_TREE_SIZE)
+    if (treeSize == INVALID_TREE_SIZE || treeSize == INVALID_FILE)
     {
         return invalidInput(NULL, 0); // invalid tree size
     }
     Row *rows = parseFile(args[1], treeSize);
+
     Node *nodes = initNodes(treeSize);
 
     int res = initTree(rows, nodes, treeSize);
