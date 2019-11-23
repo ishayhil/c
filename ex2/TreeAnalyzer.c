@@ -252,6 +252,7 @@ int handleRow(Row *row, Node *nodes, int treeSize)
         }
         else if (num == VALID_TOKEN_NOT_ADD)
         {
+            free(temp);
             return METHOD_SUCCESS;
         }
 
