@@ -591,6 +591,7 @@ int main(int argc, char *args[])
     unsigned int treeDiameter = getTreeDiameter(nodes, treeSize);
     if (treeDiameter == INT_MAX)
     { // more than 1 connectivity component
+        free(path);
         return invalidInput(nodes, treeSize);
     }
 
