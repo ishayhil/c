@@ -230,8 +230,8 @@ int handleRow(Row *row, Node *nodes, int treeSize, char *temp)
 
     int childrenCnt = cntChildren(row);
     nodes[row->rowNumber].childrenCnt = childrenCnt;
-
     Node **children = (Node **) malloc(childrenCnt * sizeof(Node *));
+    nodes[row->rowNumber].children = children;
     if (children == NULL)
     {
         return MALLOC_FAIL; // malloc failed
@@ -262,7 +262,6 @@ int handleRow(Row *row, Node *nodes, int treeSize, char *temp)
         ptr = strtok(NULL, " \n\t\r");
         i++;
     }
-    nodes[row->rowNumber].children = children;
     return METHOD_SUCCESS;
 }
 
@@ -454,10 +453,7 @@ unsigned int *getPathBetweenNodes(unsigned int v, unsigned int u, Node *nodes, i
 int invalidInput(Node *nodes, int treeSize)
 {
     fprintf(stderr, "%s", INVALID_INPUT);
-    if (treeSize > 0)
-    {
-        freeTree(nodes, treeSize);
-    }
+    freeTree(nodes, treeSize);
     return EXIT_FAILURE;
 }
 
