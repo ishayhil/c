@@ -592,9 +592,13 @@ int main(int argc, char *args[])
         return invalidInput(nodes, treeSize);
     }
 
-    // already verified to be legit:
+    // already verified to be legit numeric:
     int v = atoi(args[2]);
     int u = atoi(args[3]);
+    if (v < 0 || u < 0 || v >= treeSize || u >= treeSize) {
+        return invalidInput(nodes, treeSize);
+    }
+
     unsigned int *path = getPathBetweenNodes(v, u, nodes, treeSize);
     if (path == NULL)
     {
