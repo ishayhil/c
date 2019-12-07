@@ -2,7 +2,7 @@
 // Created by evyat on 10/13/2019.
 //
 
-#include "../RBTree.h"
+#include "RBTree.h"
 
 #ifndef TA_EX3_STRUCTS_H
 #define TA_EX3_STRUCTS_H
@@ -38,7 +38,7 @@ int concatenate(const void *word, void *pConcatenated); // implement it in Struc
 /**
  * FreeFunc for strings
  */
-void freeString(void *s); // implement it in Structs.c
+    void freeString(void *s); // implement it in Structs.c
 
 /**
  * CompFunc for Vectors, compares element by element, the vector that has the first larger

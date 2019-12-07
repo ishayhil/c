@@ -5,10 +5,11 @@
 #ifndef TA_EX3_PRODUCTEXAMPLE_C
 #define TA_EX3_PRODUCTEXAMPLE_C
 
-#include "../RBTree.h"
+#include "RBTree.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include "tree_visualizer/graph_drawer.h"
 
 #define LESS (-1)
 #define EQUAL (0)
@@ -116,13 +117,6 @@ ProductExample **getProducts()
 
 }
 
-void freeResources(RBTree *tree, ProductExample ***products)
-{
-	freeRBTree(tree);
-	productFree((*products)[1]);
-	productFree((*products)[5]);
-	free(*products);
-}
 
 void assertion(int passed, int assertion_num, char *msg)
 {
@@ -133,44 +127,50 @@ void assertion(int passed, int assertion_num, char *msg)
 
 }
 
+const char* productFormattter(const void* data)
+{
+    const ProductExample* prod = data;
+    char* buf = calloc(40 + strlen(prod->name),sizeof(char));
+    sprintf(buf, "Name: %s Price: %.2f", prod->name, prod->price);
+    return buf;
+}
+
 int main()
 {
 	ProductExample **products = getProducts();
+
 	RBTree *tree = newRBTree(productComparatorByName, productFree);
+	setFormatter(productFormattter);
 	addToRBTree(tree, products[2]);
+	addStep(tree->root, "added 1 product");
 	addToRBTree(tree, products[3]);
+    addStep(tree->root, "added 2 products");
 	addToRBTree(tree, products[4]);
+    addStep(tree->root, "added 3 products");
 	addToRBTree(tree, products[0]);
+    addStep(tree->root, "added 4 products");
+    finish("ProductExample-added 4 products");
+
 	int i = 0;
 	for (i = 0; i < 6; i++)
 	{
 		if (containsRBTree(tree, products[i]))
 		{
 			printf("\"%s\" is in the tree.\n", products[i]->name);
-			if (i == 1 || i == 5)
-			{
-				printf(" This product should not be in the tree!\nTest failed, aborting");
-				freeResources(tree, &products);
-				return 1;
-			}
 		}
 		else
 		{
 			printf("\"%s\" is not in the tree.\n", products[i]->name);
-			if (i != 1 && i != 5)
-			{
-				printf(" This product should be in the tree!\nTest failed, aborting");
-				freeResources(tree, &products);
-				return 2;
-			}
 		}
 	}
 
 	printf("\nThe number of products in the tree is %d.\n\n", tree->size);
 	forEachRBTree(tree, printProduct, NULL);
-	freeResources(tree, &products);
+
+	freeRBTree(tree);
+	free(products);
+
 	printf("test passed\n");
-	return 0;
 }
 
 
