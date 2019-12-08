@@ -6,6 +6,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #define LESS (-1)
 #define EQUAL (0)
 #define GREATER (1)
@@ -113,8 +114,10 @@ int concatenate(const void *word, void *pConcatenated)
     }
     char *dest = (char *) pConcatenated;
     char *from = (char *) word;
-
     char *p = strcat(dest, from);
+    if (strcmp(dest, "") != 0) {
+        p = strcat(dest,"\n");
+    }
     if (p == NULL)
     {
         return EQUAL;

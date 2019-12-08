@@ -261,17 +261,22 @@ int addToRBTree(RBTree *tree, void *data)
     node->left = NULL;
     node->parent = NULL;
 
-    tree->size++;
     if (tree->root == NULL)
     {
         tree->root = node;
+        tree->size++;
         return fixTree(tree, node);
     }
 
     Node *currentNode = tree->root;
     while (1)
     {
-        if (tree->compFunc(currentNode->data, data) > 0) // node >= newNode
+        int comp = tree->compFunc(currentNode->data, data);
+        if (comp == 0) {
+            free(node);
+            return FAILURE;
+        }
+        else if (comp > 0) // node >= newNode
         {
 
             if (currentNode->left == NULL)
@@ -299,6 +304,7 @@ int addToRBTree(RBTree *tree, void *data)
             }
         }
     }
+    tree->size++;
     return fixTree(tree, node);
 }
 
@@ -373,21 +379,20 @@ int compare(const void *a, const void *b)
     return *x > *y ? GREATER : LESS;
 }
 
-void freeTree(Node *root)
+void freeTree(Node *root, FreeFunc freeFunc)
 {
     if (root == NULL)
     {
-        return;
+    return;
     }
-    freeTree(root->left);
-    freeTree(root->right);
-    free(root);
+    freeTree(root->left, freeFunc);
+    freeFunc(root);
+    freeTree(root->right, freeFunc);
 }
 
 void freeRBTree(RBTree *tree)
 {
-
-    freeTree(tree->root);
+    freeTree(tree->root, tree->freeFunc);
     tree->root = NULL;
     free(tree);
 }
