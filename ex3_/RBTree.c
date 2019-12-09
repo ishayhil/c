@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "RBTree.h"
+#include "Structs.h"
 #include <stdlib.h>
 
 #define SUCCESS (1)
@@ -8,40 +9,72 @@
 #define EQUAL (0)
 #define GREATER (1)
 
+/**
+ * type for printing func
+ */
+typedef void (*PrintFunc)(Node *);
 
-int isLeftSon(Node *node)
+/**
+ * @param node
+ * @return checks if node is left son or right son.
+ */
+static int isLeftSon(Node *node)
 {
     return node->parent->left == node;
 }
 
-void printNode(Node *node)
+/**
+ * prints vector nodes
+ * @param node
+ */
+void printNodeV(Node *node)
 {
     if (node->parent == NULL)
     {
-        printf("data: %d, parent data NULL, BLACK: %d\n", *(int *) node->data, node->color);
+        printf("data: %d %d %d %d, parent data NULL, BLACK: %d\n",
+               (int) ((Vector *) node->data)->vector[0],
+               (int) ((Vector *) node->data)->vector[1],
+               (int) ((Vector *) node->data)->vector[2],
+               (int) ((Vector *) node->data)->vector[3],
+               node->color);
     }
     else
     {
         int isLeft = isLeftSon(node);
-        printf("data: %d, parent data %d, BLACK: %d, left son: %d\n",
-               *(int *) node->data,
-               *(int *) node->parent->data,
+        printf("data: %d %d %d %d, parent data %d %d %d %d, BLACK: %d, left son: %d\n",
+               (int) ((Vector *) node->data)->vector[0],
+               (int) ((Vector *) node->data)->vector[1],
+               (int) ((Vector *) node->data)->vector[2],
+               (int) ((Vector *) node->data)->vector[3],
+               (int) ((Vector *) node->parent->data)->vector[0],
+               (int) ((Vector *) node->parent->data)->vector[1],
+               (int) ((Vector *) node->parent->data)->vector[2],
+               (int) ((Vector *) node->parent->data)->vector[3],
                node->color,
                isLeft);
     }
 }
 
-void printTree(Node *root)
+/**
+ * prints the tree
+ * @param root
+ * @param func print func
+ */
+void printTree(Node *root, PrintFunc func)
 {
     if (root == NULL)
     {
         return;
     }
-    printTree(root->left);
-    printNode(root);
-    printTree(root->right);
+    printTree(root->left, func);
+    func(root);
+    printTree(root->right, func);
 }
 
+/**
+ * constructs a new RBTree with the given CompareFunc.
+ * comp: a function two compare two variables.
+ */
 RBTree *newRBTree(CompareFunc compFunc, FreeFunc freeFunc)
 {
     if (compFunc == NULL || freeFunc == NULL)
@@ -58,27 +91,48 @@ RBTree *newRBTree(CompareFunc compFunc, FreeFunc freeFunc)
     return rbTree;
 }
 
-int isLeftSonOfRightSon(Node *node)
+/**
+ * checks if the given node is left son of right son
+ * @param node
+ */
+static int isLeftSonOfRightSon(Node *node)
 {
     return isLeftSon(node) && !isLeftSon(node->parent);
 }
 
-int isRightSonOfLeftSon(Node *node)
+/**
+ * checks if the given node is right son of left son
+ * @param node
+ */
+static int isRightSonOfLeftSon(Node *node)
 {
     return !isLeftSon(node) && isLeftSon(node->parent);
 }
 
-int isLeftSonOfLeftSon(Node *node)
+/**
+ * checks if the given node is left son of left son
+ * @param node
+ */
+static int isLeftSonOfLeftSon(Node *node)
 {
     return isLeftSon(node) && isLeftSon(node->parent);
 }
 
-int isRightSonOfRightSon(Node *node)
+/**
+ * checks if the given node is right son of right son
+ * @param node
+ */
+static int isRightSonOfRightSon(Node *node)
 {
     return !isLeftSon(node) && !isLeftSon(node->parent);
 }
 
-int rotateRight(Node *g)
+/**
+ * rotates the tree to the left (where g is the root of the subtree)
+ * @param g
+ * @return 1 if success 0 else
+ */
+static int rotateRight(Node *g)
 {
 
     Node *p = g->left;
@@ -108,7 +162,12 @@ int rotateRight(Node *g)
     return SUCCESS;
 }
 
-int rotateLeft(Node *g)
+/**
+ * rotates the tree to the right (where g is the root of the subtree)
+ * @param g
+ * @return 1 if success 0 else
+ */
+static int rotateLeft(Node *g)
 {
     Node *p = g->right;
 
@@ -137,7 +196,12 @@ int rotateLeft(Node *g)
     return SUCCESS;
 }
 
-int stringItLeft(Node *x)
+/**
+ * where x is right son of left son, this function will replace places so x and p will be left sons.
+ * @param x
+ * @return 1 if success 0 else
+ */
+static int stringItLeft(Node *x)
 {
     Node *p = x->parent;
     Node *g = p->parent;
@@ -156,7 +220,12 @@ int stringItLeft(Node *x)
     return SUCCESS;
 }
 
-int stringItRight(Node *x)
+/**
+ * where x is left son of right son, this function will replace places so x and p will be right sons.
+ * @param x
+ * @return 1 if success 0 else
+ */
+static int stringItRight(Node *x)
 {
     Node *p = x->parent;
     Node *g = p->parent;
@@ -175,7 +244,13 @@ int stringItRight(Node *x)
     return SUCCESS;
 }
 
-int blackUncle(Node *newNode, RBTree *tree)
+/**
+ * when the uncle of a new node is black, this function will fix the tree
+ * @param newNode
+ * @param tree
+ * @return 1 if success, 0 else
+ */
+static int blackUncle(Node *newNode, RBTree *tree)
 {
     if (isRightSonOfRightSon(newNode) || isLeftSonOfLeftSon(newNode))
     {
@@ -209,7 +284,12 @@ int blackUncle(Node *newNode, RBTree *tree)
     return SUCCESS;
 }
 
-Node *findUncle(Node *node) // node distance from root is at least 2 when invoked!
+/**
+ * find the uncle of the given node.
+ * @param node
+ * @return the uncle
+ */
+static Node *findUncle(Node *node) // node distance from root is at least 2 when invoked!
 {
     Node *parent = node->parent;
     if (parent->parent->left == parent)
@@ -222,7 +302,13 @@ Node *findUncle(Node *node) // node distance from root is at least 2 when invoke
     }
 }
 
-int fixTree(RBTree *tree, Node *newNode)
+/**
+ * fixes the tree after a new insert
+ * @param tree
+ * @param newNode
+ * @return 1 if success, 0 else
+ */
+static int fixTree(RBTree *tree, Node *newNode)
 {
     Node *uncle;
     if (newNode == tree->root)
@@ -242,11 +328,17 @@ int fixTree(RBTree *tree, Node *newNode)
         return fixTree(tree, newNode->parent->parent);
     } // parent is red, check if uncle is read too
     else
-    { // parent is red, uncle is black TODO check if null == black?
+    { // parent is red, uncle is black
         return blackUncle(newNode, tree);
     }
 }
 
+/**
+ * add an item to the tree
+ * @param tree: the tree to add an item to.
+ * @param data: item to add to the tree.
+ * @return: 0 on failure, other on success. (if the item is already in the tree - failure).
+ */
 int addToRBTree(RBTree *tree, void *data)
 {
     if (tree == NULL || data == NULL)
@@ -272,7 +364,8 @@ int addToRBTree(RBTree *tree, void *data)
     while (1)
     {
         int comp = tree->compFunc(currentNode->data, data);
-        if (comp == 0) {
+        if (comp == 0)
+        {
             free(node);
             return FAILURE;
         }
@@ -308,6 +401,12 @@ int addToRBTree(RBTree *tree, void *data)
     return fixTree(tree, node);
 }
 
+/**
+ * check whether the tree contains this item.
+ * @param tree: the tree to add an item to.
+ * @param data: item to check.
+ * @return: 0 if the item is not in the tree, other if it is.
+ */
 int containsRBTree(RBTree *tree, void *data)
 {
     if (tree->root == NULL || data == NULL)
@@ -335,7 +434,14 @@ int containsRBTree(RBTree *tree, void *data)
     return FAILURE;
 }
 
-int forEachRBTreeRecursive(Node *root, forEachFunc func, void *args)
+/**
+ * actives the for each function on every node, in order.
+ * @param root
+ * @param func: the function to activate on all items.
+ * @param args: more optional arguments to the function (may be null if the given function support it).
+ * @return 1 if success, 0 else.
+ */
+static int forEachRBTreeRecursive(Node *root, forEachFunc func, void *args)
 {
     if (root == NULL)
     {
@@ -356,6 +462,14 @@ int forEachRBTreeRecursive(Node *root, forEachFunc func, void *args)
     return t;
 }
 
+/**
+ * Activate a function on each item of the tree. the order is an ascending order. if one of the activations of the
+ * function returns 0, the process stops.
+ * @param tree: the tree with all the items.
+ * @param func: the function to activate on all items.
+ * @param args: more optional arguments to the function (may be null if the given function support it).
+ * @return: 0 on failure, other on success.
+ */
 int forEachRBTree(RBTree *tree, forEachFunc func, void *args)
 {
     if (tree->root == NULL || func == NULL)
@@ -368,73 +482,63 @@ int forEachRBTree(RBTree *tree, forEachFunc func, void *args)
     }
 }
 
-int compare(const void *a, const void *b)
-{
-    int *x = (int *) a;
-    int *y = (int *) b;
-    if (*x == *y)
-    {
-        return EQUAL;
-    }
-    return *x > *y ? GREATER : LESS;
-}
-
-void freeTree(Node *root, FreeFunc freeFunc)
+/**
+ * frees the tree using the free function (recursive).
+ * @param root
+ * @param freeFunc the free func
+ */
+static void freeTreeRecursive(Node *root, FreeFunc freeFunc)
 {
     if (root == NULL)
     {
-    return;
+        return;
     }
-    freeTree(root->left, freeFunc);
-    freeFunc(root);
-    freeTree(root->right, freeFunc);
+    freeTreeRecursive(root->left, freeFunc);
+    freeTreeRecursive(root->right, freeFunc);
+    freeFunc(root->data);
+    free(root);
 }
 
+/**
+ * free all memory of the data structure.
+ * @param tree: the tree to free.
+ */
 void freeRBTree(RBTree *tree)
 {
-    freeTree(tree->root, tree->freeFunc);
+    freeTreeRecursive(tree->root, tree->freeFunc);
     tree->root = NULL;
     free(tree);
 }
 
-int forEachFunc1(const void *object, void *args)
-{
-    int *x = (int *) object;
-    int *y = (int *) args;
 
-    *y += *x;
-
-    return SUCCESS;
-}
-
-void freeFunc1(void *data)
-{
-    free(data);
-}
-
-// typedef int (*CompareFunc)(const void *a, const void *b);
 //int main()
 //{
-//    RBTree *tree = newRBTree(compare, freeFunc1);
+////    RBTree *tree = newRBTree(compare, freeFunc1);
+//    RBTree *tree = newRBTree(vectorCompare1By1, freeVector);
 ////    int data[] = {10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
 ////
-//    for (int i = 1 ; i < 21; i++)
+//    double vectors[6][4] = {
+//        {7, 3, 3, 1},
+//        {1, 5, 5, 7},
+//        {20, 0, 0, 1},
+//        {0, 0, 0, 0},
+//        {0, 4, 4, 200},
+//        {200, 0, 0, 0}
+//    };
+//
+//    for (int i = 1; i < 6; i++)
 //    {
-//        int *a = (int *) malloc(sizeof(int));
-//        *a = i;
-//        addToRBTree(tree, a);
+//        Vector *v = (Vector *) malloc(sizeof(Vector));
+//        double *b = (double *) malloc(sizeof(double) * 4);
+//        for (int j = 0; j < 4; ++j)
+//        {
+//            b[j] = vectors[i][j];
+//        }
+//        v->len = 4;
+//        v->vector = b;
+//        addToRBTree(tree, v);
 //    }
 //
-////    addToRBTree(tree, &(data[9]));
-////    addToRBTree(tree, &(data[9]));
-////    addToRBTree(tree, &(data[7]));
-////    addToRBTree(tree, &(data[8]));
-////    printf("%d", *(int *) tree->root->data);
-//    printTree(tree->root);
-//
-//    int a = 0;
-//    forEachRBTree(tree, forEachFunc1, &a);
-//    printf("%d", a);
-//
-////    printf("%d", 8 % 2);
+//    printTree(tree->root, printNodeV);
+//    freeRBTree(tree);
 //}

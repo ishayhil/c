@@ -86,13 +86,22 @@ Vector *findMaxNormVectorInTree(RBTree *tree) // needs to free the vector outsid
     return maxVector->len != 0 ? maxVector : NULL;
 }
 
+void printVector(Vector *v)
+{
+    printf("%d %d %d %d",
+           (int) v->vector[0],
+           (int) v->vector[1],
+           (int) v->vector[2],
+           (int) v->vector[3]
+    );
+}
+
 void freeVector(void *vector)
 {
     if (vector == NULL)
     {
         return;
     }
-
     Vector *v = (Vector *) vector;
     free(v->vector);
     v->vector = NULL;
@@ -115,8 +124,9 @@ int concatenate(const void *word, void *pConcatenated)
     char *dest = (char *) pConcatenated;
     char *from = (char *) word;
     char *p = strcat(dest, from);
-    if (strcmp(dest, "") != 0) {
-        p = strcat(dest,"\n");
+    if (strcmp(dest, "") != 0)
+    {
+        p = strcat(dest, "\n");
     }
     if (p == NULL)
     {
