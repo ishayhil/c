@@ -24,54 +24,6 @@ static int isLeftSon(Node *node)
 }
 
 /**
- * prints vector nodes
- * @param node
- */
-void printNodeV(Node *node)
-{
-    if (node->parent == NULL)
-    {
-        printf("data: %d %d %d %d, parent data NULL, BLACK: %d\n",
-               (int) ((Vector *) node->data)->vector[0],
-               (int) ((Vector *) node->data)->vector[1],
-               (int) ((Vector *) node->data)->vector[2],
-               (int) ((Vector *) node->data)->vector[3],
-               node->color);
-    }
-    else
-    {
-        int isLeft = isLeftSon(node);
-        printf("data: %d %d %d %d, parent data %d %d %d %d, BLACK: %d, left son: %d\n",
-               (int) ((Vector *) node->data)->vector[0],
-               (int) ((Vector *) node->data)->vector[1],
-               (int) ((Vector *) node->data)->vector[2],
-               (int) ((Vector *) node->data)->vector[3],
-               (int) ((Vector *) node->parent->data)->vector[0],
-               (int) ((Vector *) node->parent->data)->vector[1],
-               (int) ((Vector *) node->parent->data)->vector[2],
-               (int) ((Vector *) node->parent->data)->vector[3],
-               node->color,
-               isLeft);
-    }
-}
-
-/**
- * prints the tree
- * @param root
- * @param func print func
- */
-void printTree(Node *root, PrintFunc func)
-{
-    if (root == NULL)
-    {
-        return;
-    }
-    printTree(root->left, func);
-    func(root);
-    printTree(root->right, func);
-}
-
-/**
  * constructs a new RBTree with the given CompareFunc.
  * comp: a function two compare two variables.
  */
@@ -509,36 +461,3 @@ void freeRBTree(RBTree *tree)
     tree->root = NULL;
     free(tree);
 }
-
-
-//int main()
-//{
-////    RBTree *tree = newRBTree(compare, freeFunc1);
-//    RBTree *tree = newRBTree(vectorCompare1By1, freeVector);
-////    int data[] = {10, 9, 8, 7, 6, 5, 4, 3, 2, 1};
-////
-//    double vectors[6][4] = {
-//        {7, 3, 3, 1},
-//        {1, 5, 5, 7},
-//        {20, 0, 0, 1},
-//        {0, 0, 0, 0},
-//        {0, 4, 4, 200},
-//        {200, 0, 0, 0}
-//    };
-//
-//    for (int i = 1; i < 6; i++)
-//    {
-//        Vector *v = (Vector *) malloc(sizeof(Vector));
-//        double *b = (double *) malloc(sizeof(double) * 4);
-//        for (int j = 0; j < 4; ++j)
-//        {
-//            b[j] = vectors[i][j];
-//        }
-//        v->len = 4;
-//        v->vector = b;
-//        addToRBTree(tree, v);
-//    }
-//
-//    printTree(tree->root, printNodeV);
-//    freeRBTree(tree);
-//}
