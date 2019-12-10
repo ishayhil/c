@@ -87,7 +87,12 @@ int copyIfNormIsLarger(const void *vector, void *maxVector)
 
     if (calculateNorm(v1) > calculateNorm(v2))
     {
-        v2->vector = v1->vector;
+        free(v2->vector);
+        double* v2V = (double*) malloc(sizeof(double) * v1->len);
+        for (int i=0; i<v1->len; i++) {
+            v2V[i] = v1->vector[i];
+        }
+        v2->vector = v2V;
         v2->len = v1->len;
         return SUCCESS;
     }

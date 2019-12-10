@@ -12,7 +12,7 @@
 #include <sstream>
 #include <set>
 #include <functional>
-#include "/Users/ishayhil/Downloads/boost_1_71_0/boost/stage/lib/intrusive/rbtree.hpp"
+#include "boost/intrusive/rbtree.hpp"
 #include <cctype>
 #include <iomanip>
 #include <utility>
