@@ -6,13 +6,20 @@
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 #define LESS (-1)
 #define EQUAL (0)
 #define GREATER (1)
 #define SUCCESS (1)
 #define FAILURE (0)
 
+/**
+ * CompFunc for Vectors, compares element by element, the vector that has the first larger
+ * element is considered larger. If vectors are of different lengths and identify for the length
+ * of the shorter vector, the shorter vector is considered smaller.
+ * @param a - first vector
+ * @param b - second vector
+ * @return equal to 0 iff a == b. lower than 0 if a < b. Greater than 0 iff b < a.
+ */
 int vectorCompare1By1(const void *a, const void *b)
 {
     Vector *v1 = (Vector *) a;
@@ -42,7 +49,11 @@ int vectorCompare1By1(const void *a, const void *b)
     return EQUAL;
 }
 
-double calculateNorm(const void *vector)
+/**
+ * @param vector
+ * @return the first norm of the given vector
+ */
+static double calculateNorm(const void *vector)
 {
     Vector *v = (Vector *) vector;
     if (v->len == 0)
@@ -58,6 +69,13 @@ double calculateNorm(const void *vector)
     return norm;
 }
 
+/**
+ * copy pVector to pMaxVector if : 1. The norm of pVector is greater then the norm of pMaxVector.
+ * 								   2. pMaxVector == NULL.
+ * @param pVector pointer to Vector
+ * @param pMaxVector pointer to Vector
+ * @return 1 on success, 0 on failure (if pVector == NULL: failure).
+ */
 int copyIfNormIsLarger(const void *vector, void *maxVector)
 {
     if (vector == NULL || maxVector == NULL)
@@ -76,6 +94,10 @@ int copyIfNormIsLarger(const void *vector, void *maxVector)
     return FAILURE;
 }
 
+/**
+ * @param tree a pointer to a tree of Vectors
+ * @return pointer to a *copy* of the vector that has the largest norm (L2 Norm).
+ */
 Vector *findMaxNormVectorInTree(RBTree *tree) // needs to free the vector outside!
 {
     Vector *maxVector = (Vector *) malloc(sizeof(Vector));
@@ -86,16 +108,24 @@ Vector *findMaxNormVectorInTree(RBTree *tree) // needs to free the vector outsid
     return maxVector->len != 0 ? maxVector : NULL;
 }
 
-void printVector(Vector *v)
-{
-    printf("%d %d %d %d",
-           (int) v->vector[0],
-           (int) v->vector[1],
-           (int) v->vector[2],
-           (int) v->vector[3]
-    );
-}
 
+//void printVector(Vector *v)
+//{
+//    printf("%d %d %d %d",
+//           (int) v->vector[0],
+//           (int) v->vector[1],
+//           (int) v->vector[2],
+//           (int) v->vector[3]
+//    );
+//}
+
+/**
+ * copy pVector to pMaxVector if : 1. The norm of pVector is greater then the norm of pMaxVector.
+ * 								   2. pMaxVector == NULL.
+ * @param pVector pointer to Vector
+ * @param pMaxVector pointer to Vector
+ * @return 1 on success, 0 on failure (if pVector == NULL: failure).
+ */
 void freeVector(void *vector)
 {
     if (vector == NULL)
@@ -108,6 +138,13 @@ void freeVector(void *vector)
     free(vector);
 }
 
+/**
+ * CompFunc for strings (assumes strings end with "\0")
+ * @param a - char* pointer
+ * @param b - char* pointer
+ * @return equal to 0 iff a == b. lower than 0 if a < b. Greater than 0 iff b < a. (lexicographic
+ * order)
+ */
 int stringCompare(const void *a, const void *b)
 {
     char *x = (char *) a;
@@ -115,6 +152,13 @@ int stringCompare(const void *a, const void *b)
     return strcmp(x, y);
 }
 
+/**
+ * ForEach function that concatenates the given word to pConcatenated. pConcatenated is already allocated with
+ * enough space.
+ * @param word - char* to add to pConcatenated
+ * @param pConcatenated - char*
+ * @return 0 on failure, other on success
+ */
 int concatenate(const void *word, void *pConcatenated)
 {
     if (word == NULL || pConcatenated == NULL)
@@ -135,6 +179,9 @@ int concatenate(const void *word, void *pConcatenated)
     return GREATER;
 }
 
+/**
+ * FreeFunc for strings
+ */
 void freeString(void *s)
 {
     if (s == NULL)
