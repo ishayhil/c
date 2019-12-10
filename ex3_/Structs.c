@@ -114,17 +114,6 @@ Vector *findMaxNormVectorInTree(RBTree *tree) // needs to free the vector outsid
     return maxVector->len != 0 ? maxVector : NULL;
 }
 
-
-//void printVector(Vector *v)
-//{
-//    printf("%d %d %d %d",
-//           (int) v->vector[0],
-//           (int) v->vector[1],
-//           (int) v->vector[2],
-//           (int) v->vector[3]
-//    );
-//}
-
 /**
  * copy pVector to pMaxVector if : 1. The norm of pVector is greater then the norm of pMaxVector.
  * 								   2. pMaxVector == NULL.

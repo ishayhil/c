@@ -10,11 +10,6 @@
 #define GREATER (1)
 
 /**
- * type for printing func
- */
-typedef void (*PrintFunc)(Node *);
-
-/**
  * @param node
  * @return checks if node is left son or right son.
  */
